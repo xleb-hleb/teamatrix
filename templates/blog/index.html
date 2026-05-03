@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Блог — TEAMATRIX{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<div class="mb-5 text-center">
+    <h1 class="display-5 fw-bold">Блог</h1>
+    <p class="lead text-secondary col-lg-6 mx-auto">
+        Публикации команды о разработках, решениях и идеях в области робототехники.
+    </p>
+</div>
+
+<div class="row">
+    <!-- Публикации -->
+    <div class="col-lg-9">
+        {% if posts %}
+        <div class="row g-4">
+            {% for post in posts %}
+            <div class="col-md-6 col-xl-4">
+                <div class="card h-100 shadow-sm">
+                    {% if post.image %}
+                    <img src="{{ post.image.url }}" class="card-img-top" alt="{{ post.title }}" style="height: 180px; object-fit: cover;">
+                    {% else %}
+                    <div class="bg-secondary bg-opacity-10 d-flex align-items-center justify-content-center" style="height: 120px;">
+                        <i class="bi bi-pen text-secondary" style="font-size: 2.5rem;"></i>
+                    </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ post.title }}</h5>
+                        <p class="card-text text-secondary small">{{ post.summary|truncatewords:20 }}</p>
+                        <div class="d-flex flex-wrap gap-1 mb-2">
+                            {% for tag in post.tags.all %}
+                            <a href="?tag={{ tag.slug }}" class="badge bg-light text-dark border text-decoration-none">
+                                #{{ tag.name }}
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-muted">
+                                {% if post.author %}
+                                <i class="bi bi-person me-1"></i>{{ post.author.get_full_name|default:post.author.username }}
+                                {% endif %}
+                                &nbsp;·&nbsp;{{ post.created_at|date:"d.m.Y" }}
+                            </small>
+                        </div>
+                        <a href="{% url 'blog:post_detail' post.slug %}" class="btn btn-sm btn-outline-primary">Читать</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% include "includes/pagination.html" %}
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-pen text-muted" style="font-size: 4rem;"></i>
+            <p class="text-muted mt-3 lead">
+                {% if selected_tag %}Публикаций с этим тегом пока нет.{% else %}Публикации появятся здесь после добавления.{% endif %}
+            </p>
+            {% if selected_tag %}
+            <a href="{% url 'blog:index' %}" class="btn btn-outline-secondary">Все публикации</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Сайдбар с тегами -->
+    <div class="col-lg-3">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <i class="bi bi-tags me-2"></i>Теги
+            </div>
+            <div class="card-body">
+                {% if tags %}
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{% url 'blog:index' %}"
+                       class="badge {% if not selected_tag %}bg-primary{% else %}bg-secondary{% endif %} text-decoration-none fs-6">
+                        Все
+                    </a>
+                    {% for tag in tags %}
+                    <a href="?tag={{ tag.slug }}"
+                       class="badge {% if selected_tag == tag.slug %}bg-primary{% else %}bg-secondary{% endif %} text-decoration-none fs-6">
+                        #{{ tag.name }}
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted small mb-0">Теги пока не добавлены.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

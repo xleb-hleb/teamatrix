@@ -1,0 +1,51 @@
+<!-- О калеках -->
+{% extends "base.html" %}
+
+{% block title %}Наша команда — TEAMATRIX{% endblock %}
+
+{% block breadcrumbs %}
+<div class="bg-light border-bottom">
+    <div class="container">
+        <nav aria-label="breadcrumb" class="py-2">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{% url 'core:index' %}">Главная</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Наша команда</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Наша команда</h1>
+
+{% if team_members %}
+<div class="row g-4">
+    {% for member in team_members %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm text-center">
+            {% if member.photo %}
+            <img src="{{ member.photo.url }}" class="card-img-top" alt="{{ member.full_name }}" style="height: 300px; object-fit: cover;">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ member.full_name }}</h5>
+                <p class="text-primary fw-semibold">{{ member.position }}</p>
+                {% if member.bio %}
+                <p class="card-text text-secondary">{{ member.bio }}</p>
+                {% endif %}
+            </div>
+            {% if member.email %}
+            <div class="card-footer bg-transparent">
+                <a href="mailto:{{ member.email }}" class="text-decoration-none">
+                    <i class="bi bi-envelope"></i> {{ member.email }}
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p class="text-muted">Информация о команде скоро появится.</p>
+{% endif %}
+{% endblock %}

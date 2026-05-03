@@ -1,0 +1,17 @@
+<!-- Навигация -->
+<div class="bg-light border-bottom">
+    <div class="container">
+        <nav aria-label="breadcrumb" class="py-2">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{% url 'core:index' %}">Главная</a></li>
+                {% for crumb in breadcrumbs %}
+                {% if forloop.last %}
+                <li class="breadcrumb-item active" aria-current="page">{{ crumb.name }}</li>
+                {% else %}
+                <li class="breadcrumb-item"><a href="{{ crumb.url }}">{{ crumb.name }}</a></li>
+                {% endif %}
+                {% endfor %}
+            </ol>
+        </nav>
+    </div>
+</div>

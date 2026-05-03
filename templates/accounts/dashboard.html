@@ -1,0 +1,68 @@
+<!-- Профиль -->
+{% extends "base.html" %}
+
+{% block title %}Личный кабинет — TEAMATRIX{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Личный кабинет</h1>
+    <a href="{% url 'accounts:profile_edit' %}" class="btn btn-outline-primary">
+        <i class="bi bi-pencil"></i> Редактировать профиль
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-body text-center">
+                {% if user.profile.avatar %}
+                <img src="{{ user.profile.avatar.url }}" class="rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover;" alt="Аватар">
+                {% else %}
+                <div class="bg-secondary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 120px; height: 120px;">
+                    <i class="bi bi-person-fill text-white" style="font-size: 3rem;"></i>
+                </div>
+                {% endif %}
+                <h4>{{ user.get_full_name|default:user.username }}</h4>
+                <p class="text-muted">{{ user.email }}</p>
+                {% if user.profile.bio %}
+                <p>{{ user.profile.bio }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <i class="bi bi-newspaper"></i> Последние новости
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for news in latest_news %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <a href="{% url 'core:news_detail' news.slug %}" class="text-decoration-none">{{ news.title }}</a>
+                    <small class="text-muted">{{ news.created_at|date:"d.m.Y" }}</small>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-muted">Нет новостей</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <i class="bi bi-bookmark"></i> Мои закладки
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for article in bookmarked_articles %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <a href="{% url 'articles:article_detail' article.slug %}" class="text-decoration-none">{{ article.title }}</a>
+                    <span class="badge bg-secondary">{{ article.category.name }}</span>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-muted">У вас пока нет закладок</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

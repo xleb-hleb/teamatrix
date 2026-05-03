@@ -1,0 +1,92 @@
+<!-- Бар -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="{% url 'core:index' %}">
+            <i class="bi bi-robot"></i> TEAMATRIX
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'core:index' %}">Главная</a>
+                </li>
+                <!-- Разработка -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        Разработка
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{% url 'humanoids:index' %}">
+                            <i class="bi bi-person-arms-up me-2"></i>Гуманоидные роботы
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'development:index' %}">
+                            <i class="bi bi-gear-wide-connected me-2"></i>Разработка робота
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'equipment:index' %}">
+                            <i class="bi bi-printer me-2"></i>Оборудование
+                        </a></li>
+                    </ul>
+                </li>
+                <!-- Сообщество -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        Сообщество
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{% url 'blog:index' %}">
+                            <i class="bi bi-chat-dots me-2"></i>Форум
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'events:index' %}">
+                            <i class="bi bi-trophy me-2"></i>Мероприятия
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'articles:article_list' %}">
+                            <i class="bi bi-book me-2"></i>Каталог статей
+                        </a></li>
+                    </ul>
+                </li>
+                <!-- Проект -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        О проекте
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{% url 'ulstu:index' %}">
+                            <i class="bi bi-mortarboard me-2"></i>Проект УлГТУ
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'core:team' %}">
+                            <i class="bi bi-people me-2"></i>Наша команда
+                        </a></li>
+                    </ul>
+                </li>
+            </ul>
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <button class="nav-link btn btn-link" id="acc-toggle-btn" title="Версия для слабовидящих">
+                        <i class="bi bi-eye"></i> <span class="d-none d-lg-inline">Для слабовидящих</span>
+                    </button>
+                </li>
+                {% if user.is_authenticated %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle"></i> {{ user.username }}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{% url 'accounts:dashboard' %}">Личный кабинет</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'accounts:logout' %}">Выйти</a></li>
+                    </ul>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'accounts:login' %}">Войти</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link btn btn-outline-light btn-sm ms-2" href="{% url 'accounts:register' %}">Регистрация</a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Статьи о гуманоидных роботах — TEAMATRIX{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb" class="bg-light py-2">
+    <div class="container">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:index' %}">Главная</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'humanoids:index' %}">Гуманоидные роботы</a></li>
+            <li class="breadcrumb-item active">Статьи</li>
+        </ol>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Статьи о гуманоидных роботах</h1>
+    <a href="{% url 'humanoids:index' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> К разделу
+    </a>
+</div>
+
+{% if posts %}
+<div class="row g-4">
+    {% for post in posts %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm">
+            {% if post.image %}
+            <img src="{{ post.image.url }}" class="card-img-top" alt="{{ post.title }}" style="height: 200px; object-fit: cover;">
+            {% else %}
+            <div class="bg-secondary d-flex align-items-center justify-content-center" style="height: 200px;">
+                <i class="bi bi-person-arms-up text-white" style="font-size: 3rem;"></i>
+            </div>
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ post.title }}</h5>
+                <p class="card-text text-secondary">{{ post.summary|truncatewords:25 }}</p>
+            </div>
+            <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
+                <small class="text-muted">{{ post.created_at|date:"d.m.Y" }}</small>
+                <a href="{% url 'humanoids:post_detail' post.slug %}" class="btn btn-sm btn-outline-primary">Читать</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% include "includes/pagination.html" %}
+{% else %}
+<div class="text-center py-5">
+    <i class="bi bi-file-earmark-text text-muted" style="font-size: 4rem;"></i>
+    <p class="text-muted mt-3 lead">Статьи пока не опубликованы.</p>
+</div>
+{% endif %}
+{% endblock %}

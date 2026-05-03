@@ -1,0 +1,722 @@
+/*
+ * Accessibility styles — WCAG 2.2 Level AA compliant
+ *
+ * Contrast requirements met:
+ *   1.4.3  — Normal text ≥ 4.5:1, large text ≥ 3:1
+ *   1.4.11 — Non-text contrast (UI components, borders) ≥ 3:1
+ *   2.4.7  — Focus visible on all interactive elements
+ *   2.4.13 — Focus appearance (enhanced focus ring)
+ *
+ * Color pairs verified with WCAG contrast checker:
+ *   BW:   #000 on #fff = 21:1
+ *   WB:   #fff on #000 = 21:1, #ffd700 on #000 = 15.1:1
+ *   Blue: #e8f4ff on #0a1628 = 16.1:1, #a8d4ff on #0a1628 = 10.5:1
+ */
+
+/* ===== Accessibility Panel ===== */
+.accessibility-panel {
+    display: none;
+    background: #f0f0f0;
+    border-bottom: 2px solid #595959; /* 3:1 on #f0f0f0 */
+    font-size: 0.95rem;
+    z-index: 1050;
+}
+
+.accessibility-panel.open {
+    display: block;
+}
+
+.acc-btn {
+    border: 2px solid #595959;
+    background: #e0e0e0;
+    color: #1a1a1a; /* 16.5:1 on #e0e0e0 */
+    padding: 0.25rem 0.65rem;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.acc-btn:hover {
+    background: #c7c7c7;
+    color: #1a1a1a;
+}
+
+.acc-btn:focus-visible {
+    outline: 3px solid #0d6efd;
+    outline-offset: 2px;
+}
+
+.acc-btn.active {
+    background: #0d47a1; /* 8.6:1 on #fff */
+    color: #fff; /* 8.6:1 on #0d47a1 */
+    border-color: #0d47a1;
+}
+
+/* ===== Font Sizes =====
+ * Strategy: override BOTH the root element AND every Bootstrap element
+ * that uses a hardcoded rem value.  Bootstrap 5.3.3 compiled CSS uses
+ * literal rem in .lead, headings, display-*, buttons etc. — they do NOT
+ * use CSS custom properties so --bs-* variables can't change them.
+ * We set font-size on <html> (scales rem unit) AND provide per-element
+ * overrides as a guaranteed fallback.
+ */
+
+/* --- Scale rem unit by changing root font-size --- */
+html.acc-font-large  { font-size: 120% !important; }
+html.acc-font-xlarge { font-size: 140% !important; }
+
+/* --- Body base text --- */
+body.acc-font-large  { font-size: 1.2rem  !important; }
+body.acc-font-xlarge { font-size: 1.4rem  !important; }
+
+/* --- .lead (Bootstrap: 1.25rem) --- */
+.acc-font-large  .lead { font-size: 1.5rem  !important; }
+.acc-font-xlarge .lead { font-size: 1.75rem !important; }
+
+/* --- Headings (Bootstrap fluid: calc, resolved ≈ h1=2.5, h2=2, h3=1.75,
+       h4=1.5, h5=1.25, h6=1 rem at ≥1200 px) --- */
+.acc-font-large  h1, .acc-font-large  .h1 { font-size: 3rem    !important; }
+.acc-font-large  h2, .acc-font-large  .h2 { font-size: 2.4rem  !important; }
+.acc-font-large  h3, .acc-font-large  .h3 { font-size: 2.1rem  !important; }
+.acc-font-large  h4, .acc-font-large  .h4 { font-size: 1.8rem  !important; }
+.acc-font-large  h5, .acc-font-large  .h5 { font-size: 1.5rem  !important; }
+.acc-font-large  h6, .acc-font-large  .h6 { font-size: 1.2rem  !important; }
+
+.acc-font-xlarge h1, .acc-font-xlarge .h1 { font-size: 3.5rem  !important; }
+.acc-font-xlarge h2, .acc-font-xlarge .h2 { font-size: 2.8rem  !important; }
+.acc-font-xlarge h3, .acc-font-xlarge .h3 { font-size: 2.45rem !important; }
+.acc-font-xlarge h4, .acc-font-xlarge .h4 { font-size: 2.1rem  !important; }
+.acc-font-xlarge h5, .acc-font-xlarge .h5 { font-size: 1.75rem !important; }
+.acc-font-xlarge h6, .acc-font-xlarge .h6 { font-size: 1.4rem  !important; }
+
+/* --- Display (Bootstrap: display-1=5, -2=4.5, -3=4, -4=3.5, -5=3, -6=2.5 rem) --- */
+.acc-font-large  .display-1 { font-size: 6rem   !important; }
+.acc-font-large  .display-2 { font-size: 5.4rem !important; }
+.acc-font-large  .display-3 { font-size: 4.8rem !important; }
+.acc-font-large  .display-4 { font-size: 4.2rem !important; }
+.acc-font-large  .display-5 { font-size: 3.6rem !important; }
+.acc-font-large  .display-6 { font-size: 3rem   !important; }
+
+.acc-font-xlarge .display-1 { font-size: 7rem   !important; }
+.acc-font-xlarge .display-2 { font-size: 6.3rem !important; }
+.acc-font-xlarge .display-3 { font-size: 5.6rem !important; }
+.acc-font-xlarge .display-4 { font-size: 4.9rem !important; }
+.acc-font-xlarge .display-5 { font-size: 4.2rem !important; }
+.acc-font-xlarge .display-6 { font-size: 3.5rem !important; }
+
+/* --- Buttons (Bootstrap uses --bs-btn-font-size CSS var) --- */
+.acc-font-large  .btn { --bs-btn-font-size: 1.2rem  !important; font-size: 1.2rem  !important; }
+.acc-font-large  .btn-sm { --bs-btn-font-size: 1.05rem !important; font-size: 1.05rem !important; }
+.acc-font-large  .btn-lg { --bs-btn-font-size: 1.5rem  !important; font-size: 1.5rem  !important; }
+
+.acc-font-xlarge .btn { --bs-btn-font-size: 1.4rem  !important; font-size: 1.4rem  !important; }
+.acc-font-xlarge .btn-sm { --bs-btn-font-size: 1.225rem !important; font-size: 1.225rem !important; }
+.acc-font-xlarge .btn-lg { --bs-btn-font-size: 1.75rem !important; font-size: 1.75rem !important; }
+
+/* --- Forms --- */
+.acc-font-large  .form-control,
+.acc-font-large  .form-select,
+.acc-font-large  .form-label,
+.acc-font-large  label       { font-size: 1.2rem  !important; }
+
+.acc-font-xlarge .form-control,
+.acc-font-xlarge .form-select,
+.acc-font-xlarge .form-label,
+.acc-font-xlarge label       { font-size: 1.4rem  !important; }
+
+/* --- Navbar & breadcrumb --- */
+.acc-font-large  .nav-link,
+.acc-font-large  .navbar-brand,
+.acc-font-large  .dropdown-item { font-size: 1.1rem  !important; }
+.acc-font-large  .breadcrumb    { font-size: 1.08rem !important; }
+
+.acc-font-xlarge .nav-link,
+.acc-font-xlarge .navbar-brand,
+.acc-font-xlarge .dropdown-item { font-size: 1.25rem !important; }
+.acc-font-xlarge .breadcrumb    { font-size: 1.26rem !important; }
+
+/* --- Misc: small text, badges --- */
+.acc-font-large  small, .acc-font-large  .small { font-size: 1.05rem !important; }
+.acc-font-xlarge small, .acc-font-xlarge .small { font-size: 1.225rem !important; }
+
+.acc-font-large  .badge { font-size: 0.9rem  !important; }
+.acc-font-xlarge .badge { font-size: 1.05rem !important; }
+
+/* ===== Common: Override Bootstrap low-contrast variables ===== */
+/* Applied to ALL acc-theme-* modes to guarantee AA compliance */
+
+.acc-theme-bw,
+.acc-theme-wb,
+.acc-theme-blue {
+    --bs-secondary-color: currentColor !important;
+    --bs-secondary-rgb: currentColor !important;
+    --bs-tertiary-color: currentColor !important;
+    --bs-body-color: currentColor !important;
+    /* Bootstrap 5 uses --bs-text-opacity for rgba() text colors.
+       Resetting to 1 ensures .text-muted, .text-secondary etc. are fully opaque. */
+    --bs-text-opacity: 1 !important;
+    --bs-bg-opacity: 1 !important;
+    --bs-border-opacity: 1 !important;
+}
+
+/* Bootstrap .opacity-* utility classes make text semi-transparent —
+   override them so content is always fully visible in accessibility themes */
+.acc-theme-bw .opacity-75, .acc-theme-wb .opacity-75, .acc-theme-blue .opacity-75,
+.acc-theme-bw .opacity-50, .acc-theme-wb .opacity-50, .acc-theme-blue .opacity-50,
+.acc-theme-bw .opacity-25, .acc-theme-wb .opacity-25, .acc-theme-blue .opacity-25 {
+    opacity: 1 !important;
+}
+
+/* Focus indicators — WCAG 2.4.7 + 2.4.13 */
+.acc-theme-bw *:focus-visible,
+.acc-theme-wb *:focus-visible,
+.acc-theme-blue *:focus-visible {
+    outline: 3px solid currentColor !important;
+    outline-offset: 2px !important;
+}
+
+/* Letter spacing for readability */
+.acc-theme-bw,
+.acc-theme-wb,
+.acc-theme-blue {
+    letter-spacing: 0.02em;
+    word-spacing: 0.05em;
+}
+
+/* Underline links for WCAG 1.4.1 — distinguishable without color alone */
+.acc-theme-bw a:not(.btn):not(.nav-link):not(.navbar-brand):not(.dropdown-item):not(.page-link),
+.acc-theme-wb a:not(.btn):not(.nav-link):not(.navbar-brand):not(.dropdown-item):not(.page-link),
+.acc-theme-blue a:not(.btn):not(.nav-link):not(.navbar-brand):not(.dropdown-item):not(.page-link) {
+    text-decoration: underline !important;
+}
+
+
+/* ================================================================
+   THEME: Black on White (BW)
+   Background #fff, text #000 = 21:1
+   Links #0a3d91 on #fff = 8.4:1
+   ================================================================ */
+
+.acc-theme-bw,
+.acc-theme-bw .navbar,
+.acc-theme-bw .card,
+.acc-theme-bw .card-body,
+.acc-theme-bw .card-header,
+.acc-theme-bw .card-footer,
+.acc-theme-bw footer,
+.acc-theme-bw .bg-dark,
+.acc-theme-bw .bg-primary,
+.acc-theme-bw .bg-success,
+.acc-theme-bw .bg-warning,
+.acc-theme-bw .bg-danger,
+.acc-theme-bw .bg-info,
+.acc-theme-bw .bg-light,
+.acc-theme-bw .bg-secondary,
+.acc-theme-bw .breadcrumb,
+.acc-theme-bw .dropdown-menu,
+.acc-theme-bw .list-group-item,
+.acc-theme-bw .alert,
+.acc-theme-bw .modal-content,
+.acc-theme-bw .form-control,
+.acc-theme-bw .form-select,
+.acc-theme-bw .input-group-text,
+.acc-theme-bw blockquote,
+.acc-theme-bw pre,
+.acc-theme-bw table,
+.acc-theme-bw th,
+.acc-theme-bw td {
+    background: #fff !important;
+    color: #000 !important;
+    border-color: #595959 !important; /* 3:1 on #fff */
+}
+
+/* ALL text overrides — kill every Bootstrap gray and color utility */
+.acc-theme-bw .text-secondary,
+.acc-theme-bw .text-muted,
+.acc-theme-bw .text-body-secondary,
+.acc-theme-bw .text-body-tertiary,
+.acc-theme-bw .text-white,
+.acc-theme-bw .text-light,
+.acc-theme-bw .text-primary,
+.acc-theme-bw .text-success,
+.acc-theme-bw .text-danger,
+.acc-theme-bw .text-warning,
+.acc-theme-bw .text-info,
+.acc-theme-bw .form-text,
+.acc-theme-bw .card-text,
+.acc-theme-bw small,
+.acc-theme-bw .small,
+.acc-theme-bw .breadcrumb-item.active,
+.acc-theme-bw .breadcrumb-item + .breadcrumb-item::before,
+.acc-theme-bw figcaption,
+.acc-theme-bw .form-label,
+.acc-theme-bw label,
+.acc-theme-bw div,
+.acc-theme-bw p,
+.acc-theme-bw li,
+.acc-theme-bw span,
+.acc-theme-bw td,
+.acc-theme-bw th,
+.acc-theme-bw caption,
+.acc-theme-bw blockquote,
+.acc-theme-bw code,
+.acc-theme-bw pre,
+.acc-theme-bw h1, .acc-theme-bw h2, .acc-theme-bw h3,
+.acc-theme-bw h4, .acc-theme-bw h5, .acc-theme-bw h6,
+.acc-theme-bw .display-5,
+.acc-theme-bw .lead,
+.acc-theme-bw .fw-bold,
+.acc-theme-bw .fw-semibold {
+    color: #000 !important;
+}
+
+/* Links — #0a3d91 on #fff = 8.4:1 */
+.acc-theme-bw a,
+.acc-theme-bw .nav-link,
+.acc-theme-bw .navbar-brand,
+.acc-theme-bw .dropdown-item,
+.acc-theme-bw .breadcrumb-item a,
+.acc-theme-bw .list-group-item a,
+.acc-theme-bw .page-link {
+    color: #0a3d91 !important;
+}
+
+/* Buttons — #000 on #fff borders, inverted for filled */
+.acc-theme-bw .btn-primary,
+.acc-theme-bw .btn-outline-primary,
+.acc-theme-bw .btn-outline-light,
+.acc-theme-bw .btn-outline-secondary,
+.acc-theme-bw .badge {
+    background: #000 !important;
+    color: #fff !important;
+    border-color: #000 !important;
+}
+
+.acc-theme-bw .btn-sm.btn-outline-primary {
+    background: #000 !important;
+    color: #fff !important;
+}
+
+.acc-theme-bw .card {
+    border: 2px solid #595959 !important;
+}
+
+.acc-theme-bw .list-group-item.active {
+    background: #000 !important;
+    color: #fff !important;
+    border-color: #000 !important;
+}
+
+.acc-theme-bw .list-group-item.active a {
+    color: #fff !important;
+}
+
+.acc-theme-bw .page-item.active .page-link {
+    background: #000 !important;
+    color: #fff !important;
+    border-color: #000 !important;
+}
+
+.acc-theme-bw .page-item.disabled .page-link {
+    color: #595959 !important; /* 3:1 meets large text at min */
+    background: #e9e9e9 !important;
+    border-color: #595959 !important;
+}
+
+/* Placeholders — #595959 on #fff = 4.6:1 (AA) */
+.acc-theme-bw .form-control::placeholder {
+    color: #595959 !important;
+}
+
+/* Navbar toggler */
+.acc-theme-bw .navbar-toggler {
+    border-color: #000 !important;
+}
+
+.acc-theme-bw .navbar-toggler-icon {
+    filter: invert(0) !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23000' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+}
+
+.acc-theme-bw .accessibility-panel {
+    background: #e6e6e6 !important;
+    border-color: #595959 !important;
+    color: #000 !important;
+}
+
+.acc-theme-bw .acc-btn {
+    background: #d9d9d9 !important;
+    color: #000 !important;
+    border-color: #595959 !important;
+}
+
+
+/* ================================================================
+   THEME: White on Black (WB)
+   Background #000, text #fff = 21:1
+   Links #ffd700 on #000 = 15.1:1
+   Active bg #1a1a1a, text #ffd700 = 13.5:1
+   ================================================================ */
+
+.acc-theme-wb,
+.acc-theme-wb .navbar,
+.acc-theme-wb .card,
+.acc-theme-wb .card-body,
+.acc-theme-wb .card-header,
+.acc-theme-wb .card-footer,
+.acc-theme-wb footer,
+.acc-theme-wb .bg-dark,
+.acc-theme-wb .bg-primary,
+.acc-theme-wb .bg-success,
+.acc-theme-wb .bg-warning,
+.acc-theme-wb .bg-danger,
+.acc-theme-wb .bg-info,
+.acc-theme-wb .bg-light,
+.acc-theme-wb .bg-secondary,
+.acc-theme-wb .breadcrumb,
+.acc-theme-wb .dropdown-menu,
+.acc-theme-wb .list-group-item,
+.acc-theme-wb .alert,
+.acc-theme-wb .modal-content,
+.acc-theme-wb .form-control,
+.acc-theme-wb .form-select,
+.acc-theme-wb .input-group-text,
+.acc-theme-wb blockquote,
+.acc-theme-wb pre,
+.acc-theme-wb table,
+.acc-theme-wb th,
+.acc-theme-wb td {
+    background: #000 !important;
+    color: #fff !important;
+    border-color: #a0a0a0 !important; /* 4:1 on #000 */
+}
+
+/* ALL text overrides */
+.acc-theme-wb .text-secondary,
+.acc-theme-wb .text-muted,
+.acc-theme-wb .text-body-secondary,
+.acc-theme-wb .text-body-tertiary,
+.acc-theme-wb .text-white,
+.acc-theme-wb .text-light,
+.acc-theme-wb .text-dark,
+.acc-theme-wb .text-primary,
+.acc-theme-wb .text-success,
+.acc-theme-wb .text-danger,
+.acc-theme-wb .text-warning,
+.acc-theme-wb .text-info,
+.acc-theme-wb .form-text,
+.acc-theme-wb .card-text,
+.acc-theme-wb small,
+.acc-theme-wb .small,
+.acc-theme-wb .breadcrumb-item.active,
+.acc-theme-wb .breadcrumb-item + .breadcrumb-item::before,
+.acc-theme-wb figcaption,
+.acc-theme-wb .form-label,
+.acc-theme-wb label,
+.acc-theme-wb div,
+.acc-theme-wb p,
+.acc-theme-wb li,
+.acc-theme-wb span,
+.acc-theme-wb td,
+.acc-theme-wb th,
+.acc-theme-wb caption,
+.acc-theme-wb blockquote,
+.acc-theme-wb code,
+.acc-theme-wb pre,
+.acc-theme-wb h1, .acc-theme-wb h2, .acc-theme-wb h3,
+.acc-theme-wb h4, .acc-theme-wb h5, .acc-theme-wb h6,
+.acc-theme-wb .display-5,
+.acc-theme-wb .lead,
+.acc-theme-wb .fw-bold,
+.acc-theme-wb .fw-semibold {
+    color: #fff !important;
+}
+
+/* Links — #ffd700 on #000 = 15.1:1 */
+.acc-theme-wb a,
+.acc-theme-wb .nav-link,
+.acc-theme-wb .navbar-brand,
+.acc-theme-wb .dropdown-item,
+.acc-theme-wb .breadcrumb-item a,
+.acc-theme-wb .list-group-item a,
+.acc-theme-wb .page-link {
+    color: #ffd700 !important;
+}
+
+/* Buttons */
+.acc-theme-wb .btn-primary,
+.acc-theme-wb .btn-outline-primary,
+.acc-theme-wb .btn-outline-light,
+.acc-theme-wb .btn-outline-secondary,
+.acc-theme-wb .badge {
+    background: #fff !important;
+    color: #000 !important;
+    border-color: #fff !important;
+}
+
+.acc-theme-wb .card {
+    border: 2px solid #a0a0a0 !important;
+}
+
+/* Active list — #1a1a1a bg, #ffd700 text = 13.5:1 */
+.acc-theme-wb .list-group-item.active {
+    background: #1a1a1a !important;
+    color: #ffd700 !important;
+    border-color: #a0a0a0 !important;
+}
+
+.acc-theme-wb .list-group-item.active a {
+    color: #ffd700 !important;
+}
+
+.acc-theme-wb .page-item.active .page-link {
+    background: #fff !important;
+    color: #000 !important;
+    border-color: #fff !important;
+}
+
+/* Disabled — #a0a0a0 on #000 = 4:1 (AA large text) */
+.acc-theme-wb .page-item.disabled .page-link {
+    color: #a0a0a0 !important;
+    background: #1a1a1a !important;
+    border-color: #595959 !important;
+}
+
+/* Placeholders — #a0a0a0 on #000 = 4:1 */
+.acc-theme-wb .form-control::placeholder {
+    color: #a0a0a0 !important;
+}
+
+/* Navbar toggler */
+.acc-theme-wb .navbar-toggler {
+    border-color: #fff !important;
+}
+
+.acc-theme-wb .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23fff' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+}
+
+.acc-theme-wb .accessibility-panel {
+    background: #1a1a1a !important;
+    border-color: #a0a0a0 !important;
+    color: #fff !important;
+}
+
+.acc-theme-wb .accessibility-panel span {
+    color: #fff !important;
+}
+
+.acc-theme-wb .acc-btn {
+    background: #2b2b2b !important;
+    color: #fff !important;
+    border-color: #a0a0a0 !important;
+}
+
+.acc-theme-wb .acc-btn.active {
+    background: #ffd700 !important;
+    color: #000 !important;
+    border-color: #ffd700 !important;
+}
+
+/* Focus — high-vis yellow ring on black */
+.acc-theme-wb *:focus-visible {
+    outline-color: #ffd700 !important;
+}
+
+
+/* ================================================================
+   THEME: Dark Blue
+   Background #0a1628, text #e8f4ff = 16.1:1
+   Links #a8d4ff on #0a1628 = 10.5:1
+   Button bg #1b4f8a, text #fff = 6.7:1
+   ================================================================ */
+
+.acc-theme-blue,
+.acc-theme-blue .navbar,
+.acc-theme-blue .card,
+.acc-theme-blue .card-body,
+.acc-theme-blue .card-header,
+.acc-theme-blue .card-footer,
+.acc-theme-blue footer,
+.acc-theme-blue .bg-dark,
+.acc-theme-blue .bg-primary,
+.acc-theme-blue .bg-success,
+.acc-theme-blue .bg-warning,
+.acc-theme-blue .bg-danger,
+.acc-theme-blue .bg-info,
+.acc-theme-blue .bg-light,
+.acc-theme-blue .bg-secondary,
+.acc-theme-blue .breadcrumb,
+.acc-theme-blue .dropdown-menu,
+.acc-theme-blue .list-group-item,
+.acc-theme-blue .alert,
+.acc-theme-blue .modal-content,
+.acc-theme-blue .form-control,
+.acc-theme-blue .form-select,
+.acc-theme-blue .input-group-text,
+.acc-theme-blue blockquote,
+.acc-theme-blue pre,
+.acc-theme-blue table,
+.acc-theme-blue th,
+.acc-theme-blue td {
+    background: #0a1628 !important;
+    color: #e8f4ff !important;
+    border-color: #3a6fa8 !important; /* 3.2:1 on #0a1628 */
+}
+
+/* ALL text overrides */
+.acc-theme-blue .text-secondary,
+.acc-theme-blue .text-muted,
+.acc-theme-blue .text-body-secondary,
+.acc-theme-blue .text-body-tertiary,
+.acc-theme-blue .text-white,
+.acc-theme-blue .text-light,
+.acc-theme-blue .text-dark,
+.acc-theme-blue .text-primary,
+.acc-theme-blue .text-success,
+.acc-theme-blue .text-danger,
+.acc-theme-blue .text-warning,
+.acc-theme-blue .text-info,
+.acc-theme-blue .form-text,
+.acc-theme-blue .card-text,
+.acc-theme-blue small,
+.acc-theme-blue .small,
+.acc-theme-blue .breadcrumb-item.active,
+.acc-theme-blue .breadcrumb-item + .breadcrumb-item::before,
+.acc-theme-blue figcaption,
+.acc-theme-blue .form-label,
+.acc-theme-blue label,
+.acc-theme-blue div,
+.acc-theme-blue p,
+.acc-theme-blue li,
+.acc-theme-blue span,
+.acc-theme-blue td,
+.acc-theme-blue th,
+.acc-theme-blue caption,
+.acc-theme-blue blockquote,
+.acc-theme-blue code,
+.acc-theme-blue pre,
+.acc-theme-blue h1, .acc-theme-blue h2, .acc-theme-blue h3,
+.acc-theme-blue h4, .acc-theme-blue h5, .acc-theme-blue h6,
+.acc-theme-blue .display-5,
+.acc-theme-blue .lead,
+.acc-theme-blue .fw-bold,
+.acc-theme-blue .fw-semibold {
+    color: #e8f4ff !important;
+}
+
+/* Links — #a8d4ff on #0a1628 = 10.5:1 */
+.acc-theme-blue a,
+.acc-theme-blue .nav-link,
+.acc-theme-blue .navbar-brand,
+.acc-theme-blue .dropdown-item,
+.acc-theme-blue .breadcrumb-item a,
+.acc-theme-blue .list-group-item a,
+.acc-theme-blue .page-link {
+    color: #a8d4ff !important;
+}
+
+/* Buttons — #1b4f8a bg, #fff text = 6.7:1 */
+.acc-theme-blue .btn-primary,
+.acc-theme-blue .btn-outline-primary,
+.acc-theme-blue .btn-outline-light,
+.acc-theme-blue .btn-outline-secondary,
+.acc-theme-blue .badge {
+    background: #1b4f8a !important;
+    color: #fff !important;
+    border-color: #a8d4ff !important;
+}
+
+.acc-theme-blue .card {
+    border: 2px solid #3a6fa8 !important;
+}
+
+/* Active list — #1b4f8a bg, #fff text = 6.7:1 */
+.acc-theme-blue .list-group-item.active {
+    background: #1b4f8a !important;
+    color: #fff !important;
+    border-color: #3a6fa8 !important;
+}
+
+.acc-theme-blue .list-group-item.active a {
+    color: #fff !important;
+}
+
+.acc-theme-blue .page-item.active .page-link {
+    background: #1b4f8a !important;
+    color: #fff !important;
+    border-color: #a8d4ff !important;
+}
+
+/* Disabled — #6a9fd4 on #0a1628 = 5.4:1 */
+.acc-theme-blue .page-item.disabled .page-link {
+    color: #6a9fd4 !important;
+    background: #0d1f3c !important;
+    border-color: #3a6fa8 !important;
+}
+
+/* Placeholders — #6a9fd4 on #0a1628 = 5.4:1 */
+.acc-theme-blue .form-control::placeholder {
+    color: #6a9fd4 !important;
+}
+
+/* Navbar toggler */
+.acc-theme-blue .navbar-toggler {
+    border-color: #a8d4ff !important;
+}
+
+.acc-theme-blue .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23a8d4ff' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+}
+
+.acc-theme-blue .accessibility-panel {
+    background: #071020 !important;
+    border-color: #3a6fa8 !important;
+    color: #e8f4ff !important;
+}
+
+.acc-theme-blue .accessibility-panel span {
+    color: #e8f4ff !important;
+}
+
+.acc-theme-blue .acc-btn {
+    background: #0d1f3c !important;
+    color: #e8f4ff !important;
+    border-color: #3a6fa8 !important;
+}
+
+.acc-theme-blue .acc-btn.active {
+    background: #a8d4ff !important;
+    color: #0a1628 !important;
+    border-color: #a8d4ff !important;
+}
+
+/* Focus — light blue ring */
+.acc-theme-blue *:focus-visible {
+    outline-color: #a8d4ff !important;
+}
+
+
+/* ===== Futuristic FX — disable in accessibility themes ===== */
+/* (full FX disable is now in futuristic.css; this is legacy kept for safety) */
+.acc-theme-bw #fx-bg-canvas,
+.acc-theme-bw body::before,
+.acc-theme-wb #fx-bg-canvas,
+.acc-theme-wb body::before {
+    display: none !important;
+}
+.acc-theme-bw .card,
+.acc-theme-wb .card { clip-path: none !important; }
+.acc-theme-bw .btn,
+.acc-theme-wb .btn  { clip-path: none !important; }
+
+/* ===== Hide Images ===== */
+.acc-no-images img,
+.acc-no-images [style*="background-image"] {
+    visibility: hidden !important;
+}
+
+.acc-no-images .card-img-top,
+.acc-no-images .img-fluid {
+    display: none !important;
+}

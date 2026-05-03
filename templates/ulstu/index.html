@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}Проект УлГТУ — TEAMATRIX{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<div class="px-4 py-5 mb-5 text-center bg-dark text-white rounded-3">
+    <i class="bi bi-mortarboard display-3 mb-3 d-block"></i>
+    <h1 class="display-5 fw-bold">Проект УлГТУ</h1>
+    <p class="lead col-lg-7 mx-auto text-light opacity-75">
+        Студенты кафедры ВТ под руководством доцента А. Г. Игонина создали и активно развивают сайт
+    </p>
+    <a href="#apply" class="btn btn-primary btn-lg mt-2">
+        <i class="bi bi-person-plus me-1"></i> Вступить в проект
+    </a>
+</div>
+
+<!-- Описание кафедры -->
+<section class="mb-5">
+    <div class="row align-items-center g-4">
+        <div class="col-md-6">
+            <h2>О кафедре</h2>
+            <p class="text-secondary">
+                На кафедре осуществляется подготовка бакалавров по направлению «Информатика и вычислительная техника», профиль «Искусственный интеллект, робототехника и сенсорика», магистров по программе «Искусственный интеллект в автоматизации проектирования».
+            </p>
+            <ul class="list-unstyled">
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-primary me-2"></i>Механика и конструирование</li>
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-primary me-2"></i>Электроника и управление</li>
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-primary me-2"></i>Программирование и ИИ</li>
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-primary me-2"></i>Компьютерное зрение</li>
+            </ul>
+        </div>
+        <div class="col-md-6">
+            <div class="bg-dark text-white rounded-3 p-4 text-center">
+                <i class="bi bi-building display-1 opacity-50 mb-3 d-block"></i>
+                <h4>УлГТУ</h4>
+                <p class="text-light opacity-75 mb-0">Ульяновский государственный<br>технический университет</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Дорожная карта -->
+{% if roadmap %}
+<section class="mb-5">
+    <h2 class="mb-4"><i class="bi bi-map me-2"></i>Дорожная карта</h2>
+    <div class="position-relative">
+        {% for stage in roadmap %}
+        <div class="d-flex mb-4">
+            <div class="flex-shrink-0 me-4 text-center" style="width: 80px;">
+                <div class="rounded-circle d-inline-flex align-items-center justify-content-center border border-2
+                    {% if stage.is_completed %}bg-success border-success text-white{% else %}bg-white border-primary text-primary{% endif %}"
+                    style="width: 42px; height: 42px;">
+                    {% if stage.is_completed %}
+                    <i class="bi bi-check-lg"></i>
+                    {% else %}
+                    <i class="bi bi-circle"></i>
+                    {% endif %}
+                </div>
+                <div class="mt-1">
+                    <small class="text-muted fw-semibold">{{ stage.period }}</small>
+                </div>
+            </div>
+            <div class="card flex-grow-1 shadow-sm {% if stage.is_completed %}border-success border-opacity-25{% endif %}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h5 class="card-title mb-1">{{ stage.title }}</h5>
+                        {% if stage.is_completed %}
+                        <span class="badge bg-success ms-2 flex-shrink-0">Завершён</span>
+                        {% else %}
+                        <span class="badge bg-primary ms-2 flex-shrink-0">В процессе</span>
+                        {% endif %}
+                    </div>
+                    <p class="card-text text-secondary mb-0">{{ stage.description }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Команды -->
+{% if teams %}
+<section class="mb-5">
+    <h2 class="mb-4"><i class="bi bi-people me-2"></i>Команды проекта</h2>
+    {% for team in teams %}
+    <div class="mb-5">
+        <h4 class="mb-3 border-bottom pb-2">{{ team.name }}</h4>
+        {% if team.description %}
+        <p class="text-secondary mb-4">{{ team.description }}</p>
+        {% endif %}
+        {% if team.members.all %}
+        <div class="row g-3">
+            {% for member in team.members.all %}
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 shadow-sm text-center">
+                    <div class="card-body pt-4">
+                        {% if member.photo %}
+                        <img src="{{ member.photo.url }}" alt="{{ member.full_name }}"
+                             class="rounded-circle mb-3"
+                             style="width: 80px; height: 80px; object-fit: cover;">
+                        {% else %}
+                        <div class="bg-secondary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                             style="width: 80px; height: 80px;">
+                            <i class="bi bi-person text-secondary" style="font-size: 2rem;"></i>
+                        </div>
+                        {% endif %}
+                        <h6 class="card-title mb-1">{{ member.full_name }}</h6>
+                        <p class="text-primary small fw-semibold mb-2">{{ member.role }}</p>
+                        {% if member.bio %}
+                        <p class="card-text text-secondary small">{{ member.bio|truncatewords:15 }}</p>
+                        {% endif %}
+                        {% if member.email %}
+                        <a href="mailto:{{ member.email }}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-envelope me-1"></i>Email
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</section>
+{% endif %}
+
+<!-- Форма заявки -->
+<section class="mb-5" id="apply">
+    <div class="card shadow-sm border-primary border-opacity-25">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0"><i class="bi bi-person-plus me-2"></i>Вступить в проект</h4>
+        </div>
+        <div class="card-body">
+            <p class="text-secondary mb-4">
+                Хотите присоединиться к команде TEAMATRIX? Заполните заявку и мы свяжемся с вами.
+            </p>
+
+            <form method="post" action="{% url 'ulstu:apply' %}">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Имя и фамилия *</label>
+                        <input type="text" name="name" class="form-control" placeholder="Иван Иванов" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Email *</label>
+                        <input type="email" name="email" class="form-control" placeholder="ivan@example.com" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Телефон</label>
+                        <input type="tel" name="phone" class="form-control" placeholder="+7 (900) 000-00-00">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Специальность / направление *</label>
+                        <input type="text" name="specialty" class="form-control"
+                               placeholder="Программирование, Механика, Электроника..." required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Мотивация *</label>
+                        <textarea name="motivation" class="form-control" rows="4"
+                                  placeholder="Расскажите, почему вы хотите вступить в проект и что вы можете привнести..."
+                                  required></textarea>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox"
+                                   name="consent_personal_data" id="consentCheck" required>
+                            <label class="form-check-label" for="consentCheck">
+                                Я согласен(-на) на обработку
+                                <a href="{% url 'ulstu:privacy_policy' %}" target="_blank">
+                                    персональных данных
+                                </a>
+                                в соответствии с политикой конфиденциальности *
+                            </label>
+                            <div class="invalid-feedback">
+                                Необходимо дать согласие на обработку персональных данных.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send me-1"></i>Отправить заявку
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

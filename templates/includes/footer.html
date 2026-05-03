@@ -1,0 +1,56 @@
+<!-- Футер -->
+<footer class="bg-dark text-light py-5 mt-auto">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-robot"></i> TEAMATRIX</h5>
+                <p class="text-secondary">Разработка гуманоидного робота. Проект кафедры ВТ УлГТУ.</p>
+                <div class="d-flex gap-3 mt-3">
+                    <a href="{% url 'ulstu:index' %}" class="text-secondary text-decoration-none small">
+                        <i class="bi bi-mortarboard me-1"></i>УлГТУ
+                    </a>
+                    <a href="{% url 'core:team' %}" class="text-secondary text-decoration-none small">
+                        <i class="bi bi-people me-1"></i>Команда
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <h6 class="fw-semibold mb-3">Разработка</h6>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><a href="{% url 'humanoids:index' %}" class="text-secondary text-decoration-none">Гуманоиды</a></li>
+                    <li class="mb-2"><a href="{% url 'development:index' %}" class="text-secondary text-decoration-none">Робот</a></li>
+                    <li class="mb-2"><a href="{% url 'equipment:index' %}" class="text-secondary text-decoration-none">Оборудование</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <h6 class="fw-semibold mb-3">Сообщество</h6>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><a href="{% url 'blog:index' %}" class="text-secondary text-decoration-none">Форум</a></li>
+                    <li class="mb-2"><a href="{% url 'events:index' %}" class="text-secondary text-decoration-none">Мероприятия</a></li>
+                    <li class="mb-2"><a href="{% url 'articles:article_list' %}" class="text-secondary text-decoration-none">Статьи</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <h6 class="fw-semibold mb-3">О проекте</h6>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><a href="{% url 'core:index' %}" class="text-secondary text-decoration-none">Главная</a></li>
+                    <li class="mb-2"><a href="{% url 'ulstu:index' %}" class="text-secondary text-decoration-none">УлГТУ</a></li>
+                    <li class="mb-2"><a href="{% url 'core:team' %}" class="text-secondary text-decoration-none">Команда</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <h6 class="fw-semibold mb-3">Аккаунт</h6>
+                <ul class="list-unstyled">
+                    {% if user.is_authenticated %}
+                    <li class="mb-2"><a href="{% url 'accounts:dashboard' %}" class="text-secondary text-decoration-none">Кабинет</a></li>
+                    {% else %}
+                    <li class="mb-2"><a href="{% url 'accounts:login' %}" class="text-secondary text-decoration-none">Войти</a></li>
+                    <li class="mb-2"><a href="{% url 'accounts:register' %}" class="text-secondary text-decoration-none">Регистрация</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+        <hr class="border-secondary mt-4">
+        <p class="text-center text-secondary mb-0">&copy; TEAMATRIX 2026. Проект кафедры ВТ УлГТУ.</p>
+    </div>
+</footer>

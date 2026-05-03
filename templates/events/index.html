@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Мероприятия — TEAMATRIX{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<div class="px-4 py-5 mb-5 text-center bg-dark text-white rounded-3">
+    <i class="bi bi-trophy display-3 mb-3 d-block"></i>
+    <h1 class="display-5 fw-bold">Мероприятия</h1>
+    <p class="lead col-lg-7 mx-auto text-light opacity-75">
+        Конференции, конкурсы и соревнования, где можно представить разработки в области робототехники.
+    </p>
+</div>
+
+<!-- Предстоящие события -->
+<section class="mb-5">
+    <h2 class="mb-4"><i class="bi bi-calendar-event me-2"></i>Предстоящие события</h2>
+    {% if upcoming_events %}
+    <div class="row g-4">
+        {% for event in upcoming_events %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm border-primary border-opacity-25">
+                {% if event.image %}
+                <img src="{{ event.image.url }}" class="card-img-top" alt="{{ event.title }}" style="height: 180px; object-fit: cover;">
+                {% else %}
+                <div class="bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" style="height: 120px;">
+                    <i class="bi bi-calendar-event text-primary" style="font-size: 2.5rem;"></i>
+                </div>
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ event.title }}</h5>
+                    <p class="card-text text-secondary">{{ event.description|truncatewords:20 }}</p>
+                    <div class="d-flex flex-wrap gap-2 mb-2">
+                        <span class="badge bg-primary">
+                            <i class="bi bi-calendar3 me-1"></i>
+                            {{ event.date|date:"d.m.Y" }}{% if event.end_date %} — {{ event.end_date|date:"d.m.Y" }}{% endif %}
+                        </span>
+                        {% if event.location %}
+                        <span class="badge bg-secondary">
+                            <i class="bi bi-geo-alt me-1"></i>{{ event.location }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if event.url %}
+                <div class="card-footer bg-transparent">
+                    <a href="{{ event.url }}" target="_blank" rel="noopener" class="btn btn-sm btn-primary">
+                        <i class="bi bi-box-arrow-up-right me-1"></i> Подробнее
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle me-2"></i>Предстоящих событий пока нет. Следите за обновлениями!
+    </div>
+    {% endif %}
+</section>
+
+<!-- Прошедшие события -->
+{% if past_events %}
+<section class="mb-5">
+    <h2 class="mb-4 text-muted"><i class="bi bi-calendar-check me-2"></i>Прошедшие события</h2>
+    <div class="row g-3">
+        {% for event in past_events %}
+        <div class="col-md-6">
+            <div class="card shadow-sm opacity-75">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="card-title fw-semibold">{{ event.title }}</h6>
+                            <p class="card-text text-secondary small">{{ event.description|truncatewords:15 }}</p>
+                            <div class="d-flex gap-2">
+                                <span class="badge bg-secondary">{{ event.date|date:"d.m.Y" }}</span>
+                                {% if event.location %}
+                                <span class="badge bg-light text-dark border">{{ event.location }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if event.url %}
+                        <a href="{{ event.url }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary ms-3 flex-shrink-0">
+                            <i class="bi bi-box-arrow-up-right"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% if not upcoming_events and not past_events %}
+<div class="text-center py-5">
+    <i class="bi bi-calendar-x text-muted" style="font-size: 4rem;"></i>
+    <p class="text-muted mt-3 lead">Мероприятия появятся здесь после публикации.</p>
+</div>
+{% endif %}
+{% endblock %}

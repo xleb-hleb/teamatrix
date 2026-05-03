@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Видео о гуманоидных роботах — TEAMATRIX{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb" class="bg-light py-2">
+    <div class="container">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:index' %}">Главная</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'humanoids:index' %}">Гуманоидные роботы</a></li>
+            <li class="breadcrumb-item active">Видео</li>
+        </ol>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Видеоматериалы</h1>
+    <a href="{% url 'humanoids:index' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> К разделу
+    </a>
+</div>
+
+{% if videos %}
+<div class="row g-4">
+    {% for video in videos %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm">
+            <div class="ratio ratio-16x9">
+                <iframe src="{{ video.get_embed_url }}" title="{{ video.title }}" allowfullscreen></iframe>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">{{ video.title }}</h5>
+                {% if video.description %}
+                <p class="card-text text-secondary">{{ video.description|truncatewords:20 }}</p>
+                {% endif %}
+            </div>
+            <div class="card-footer bg-transparent">
+                <small class="text-muted">{{ video.created_at|date:"d.m.Y" }}</small>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% include "includes/pagination.html" %}
+{% else %}
+<div class="text-center py-5">
+    <i class="bi bi-play-circle text-muted" style="font-size: 4rem;"></i>
+    <p class="text-muted mt-3 lead">Видеоматериалы пока не опубликованы.</p>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,164 @@
+<!-- Главная страница -->
+{% extends "base.html" %}
+
+{% block title %}TEAMATRIX — Разработка гуманоидного робота{% endblock %}
+
+{% block content %}
+
+<!-- ── Hero ─────────────────────────────────────────────────────── -->
+<div class="mb-5 text-center position-relative py-3" data-hero>
+    <!-- Parallax decorative hex shapes behind title -->
+    <div aria-hidden="true" data-parallax="0.12" style="position:absolute;inset:0;pointer-events:none;overflow:hidden;">
+        <svg width="100%" height="100%" style="position:absolute;top:0;left:0;opacity:0.07">
+            <polygon points="80,10 110,28 110,64 80,82 50,64 50,28"  fill="#0ea5e9"/>
+            <polygon points="420,30 450,48 450,84 420,102 390,84 390,48" fill="#38bdf8"/>
+            <polygon points="680,5  700,18 700,44 680,57 660,44 660,18" fill="#0ea5e9"/>
+            <polygon points="940,20 970,38 970,74 940,92 910,74 910,38" fill="#38bdf8"/>
+            <!-- triangles -->
+            <polygon points="160,15 185,55 135,55" fill="#0ea5e9" opacity="0.6"/>
+            <polygon points="800,8  820,40 780,40" fill="#0ea5e9" opacity="0.5"/>
+            <polygon points="560,25 580,58 540,58" fill="#38bdf8" opacity="0.5"/>
+        </svg>
+    </div>
+
+    <span class="fx-sys" style="justify-content:center;display:flex;">TEAMATRIX // INIT_SEQUENCE</span>
+    <h1 class="display-4 fw-bold fx-glitch">TEAMATRIX</h1>
+    <div class="fx-heading-accent mx-auto mb-3" style="width:80px;"></div>
+    <p class="lead text-secondary col-lg-7 mx-auto">
+        Место где активно собираются и публикуются статьи посвященные работотехнике
+    </p>
+    <div class="d-flex gap-3 justify-content-center flex-wrap mt-4">
+        <a href="{% url 'development:index' %}" class="btn btn-primary btn-lg">
+            <i class="bi bi-gear-wide-connected me-1"></i> О разработке
+        </a>
+        <a href="{% url 'ulstu:index' %}#apply" class="btn btn-outline-secondary btn-lg">
+            <i class="bi bi-person-plus me-1"></i> Вступить в проект
+        </a>
+    </div>
+
+    <!-- Corner bracket decoration on hero -->
+    <div aria-hidden="true" style="position:absolute;top:0;left:0;width:24px;height:24px;border-top:1.5px solid rgba(14,165,233,0.4);border-left:1.5px solid rgba(14,165,233,0.4);pointer-events:none;"></div>
+    <div aria-hidden="true" style="position:absolute;bottom:0;right:0;width:24px;height:24px;border-bottom:1.5px solid rgba(14,165,233,0.4);border-right:1.5px solid rgba(14,165,233,0.4);pointer-events:none;"></div>
+</div>
+
+<!-- ── Гуманоидные роботы ────────────────────────────────────────── -->
+<section class="mb-5 p-4 bg-dark text-white rounded-3">
+    <span class="fx-sys">SYS.01 // HUMANOID_MODULE</span>
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h2 class="fw-bold mb-2">
+                <i class="bi bi-person-arms-up me-2"></i>Гуманоидные роботы
+            </h2>
+            <p class="text-light opacity-75 mb-3">
+                Исследования, технические статьи и видеоматериалы о гуманоидной робототехнике —
+                от прототипов до производственных систем по всему миру.
+            </p>
+            <a href="{% url 'humanoids:index' %}" class="btn btn-light">
+                Подробнее <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+        <div class="col-md-4 text-center d-none d-md-block">
+            <i class="bi bi-person-arms-up opacity-25" data-parallax="-0.04" style="font-size: 8rem; display:block;"></i>
+        </div>
+    </div>
+</section>
+
+<!-- ── Разработка робота ────────────────────────────────────────── -->
+<section class="mb-5 p-4 border rounded-3">
+    <span class="fx-sys">SYS.02 // DEVELOPMENT_MODULE</span>
+    <div class="row align-items-center">
+        <div class="col-md-4 text-center d-none d-md-block">
+            <i class="bi bi-gear-wide-connected text-primary opacity-25" data-parallax="-0.04" style="font-size: 8rem; display:block;"></i>
+        </div>
+        <div class="col-md-8">
+            <h2 class="fw-bold mb-2">
+                <i class="bi bi-gear-wide-connected me-2 text-primary"></i>Разработка робота
+            </h2>
+            <p class="text-secondary mb-3">
+                Технические решения по подсистемам: глаза, руки, корпус. Комплектующие с характеристиками,
+                3D-модели, алгоритмы и ссылки на GitHub-репозитории.
+            </p>
+            <a href="{% url 'development:index' %}" class="btn btn-primary">
+                Подробнее <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ── Мероприятия ──────────────────────────────────────────────── -->
+<section class="mb-5 p-4 bg-primary text-white rounded-3">
+    <span class="fx-sys" style="color:rgba(186,230,253,0.9)">SYS.03 // EVENTS_MODULE</span>
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h2 class="fw-bold mb-2">
+                <i class="bi bi-trophy me-2"></i>Мероприятия
+            </h2>
+            <p class="text-light opacity-75 mb-3">
+                Конференции, конкурсы и соревнования, где можно представить разработки в области робототехники.
+            </p>
+            <a href="{% url 'events:index' %}" class="btn btn-light">
+                Подробнее <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+        <div class="col-md-4 text-center d-none d-md-block">
+            <i class="bi bi-trophy opacity-25" data-parallax="-0.04" style="font-size: 8rem; display:block;"></i>
+        </div>
+    </div>
+</section>
+
+<!-- ── Проект УлГТУ ─────────────────────────────────────────────── -->
+<section class="mb-5 p-4 border border-primary border-opacity-25 rounded-3">
+    <span class="fx-sys">SYS.04 // ULSTU_PROJECT</span>
+    <div class="row align-items-center">
+        <div class="col-md-4 text-center d-none d-md-block">
+            <i class="bi bi-mortarboard text-primary opacity-25" data-parallax="-0.04" style="font-size: 8rem; display:block;"></i>
+        </div>
+        <div class="col-md-8">
+            <h2 class="fw-bold mb-2">
+                <i class="bi bi-mortarboard me-2 text-primary"></i>Проект УлГТУ
+            </h2>
+            <p class="text-secondary mb-3">
+                Описание кафедры, дорожная карта развития проекта, состав команд
+                и форма заявки на вступление в проект TEAMATRIX.
+            </p>
+            <a href="{% url 'ulstu:index' %}" class="btn btn-primary">
+                Подробнее <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ── Последние новости ────────────────────────────────────────── -->
+<section class="mb-4">
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <span class="fx-sys mb-0" style="display:inline;">SYS.05 //</span>
+        <h2 class="mb-0">Последние новости</h2>
+        <div class="fx-divider flex-grow-1"><span class="fx-divider-hex"></span></div>
+    </div>
+
+    {% if news_list %}
+    <div class="row g-4">
+        {% for news in news_list %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                {% if news.image %}
+                <img src="{{ news.image.url }}" class="card-img-top" alt="{{ news.title }}" style="height: 200px; object-fit: cover;">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ news.title }}</h5>
+                    <p class="card-text text-secondary">{{ news.summary|truncatewords:25 }}</p>
+                </div>
+                <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
+                    <small class="text-muted">{{ news.created_at|date:"d.m.Y" }}</small>
+                    <a href="{% url 'core:news_detail' news.slug %}" class="btn btn-sm btn-outline-primary">Читать</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-muted">Пока нет опубликованных новостей.</p>
+    {% endif %}
+</section>
+
+{% endblock %}

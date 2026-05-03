@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Оборудование для изготовления — TEAMATRIX{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<div class="px-4 py-5 mb-5 text-center bg-dark text-white rounded-3">
+    <i class="bi bi-printer display-3 mb-3 d-block"></i>
+    <h1 class="display-5 fw-bold">Оборудование для изготовления</h1>
+    <p class="lead col-lg-7 mx-auto text-light opacity-75">
+        Материалы для печати, работа с тканями и каталог поставщиков для изготовления компонентов робота.
+    </p>
+    <a href="{% url 'equipment:suppliers' %}" class="btn btn-outline-light btn-lg mt-2">
+        <i class="bi bi-building me-1"></i> Каталог поставщиков
+    </a>
+</div>
+
+<!-- Категории и материалы -->
+{% if categories %}
+{% for category in categories %}
+<section class="mb-5">
+    <h2 class="mb-4">
+        <i class="bi {{ category.icon }} me-2 text-primary"></i>{{ category.name }}
+    </h2>
+    {% if category.description %}
+    <p class="text-secondary mb-4">{{ category.description }}</p>
+    {% endif %}
+
+    {% if category.materials.all %}
+    <div class="row g-4">
+        {% for material in category.materials.all %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                {% if material.image %}
+                <img src="{{ material.image.url }}" class="card-img-top" alt="{{ material.name }}" style="height: 180px; object-fit: cover;">
+                {% else %}
+                <div class="bg-secondary bg-opacity-10 d-flex align-items-center justify-content-center" style="height: 100px;">
+                    <i class="bi bi-box text-secondary" style="font-size: 2.5rem;"></i>
+                </div>
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ material.name }}</h5>
+                    <p class="card-text text-secondary">{{ material.description }}</p>
+                    {% if material.properties %}
+                    <hr>
+                    <h6 class="text-muted small">Характеристики:</h6>
+                    <p class="card-text small text-secondary">{{ material.properties }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-muted">Материалы для этой категории ещё не добавлены.</p>
+    {% endif %}
+</section>
+{% endfor %}
+{% endif %}
+
+<!-- Поставщики -->
+{% if suppliers %}
+<section class="mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0"><i class="bi bi-building me-2"></i>Поставщики и фабрики</h2>
+        <a href="{% url 'equipment:suppliers' %}" class="btn btn-outline-primary btn-sm">
+            Полный каталог <i class="bi bi-arrow-right ms-1"></i>
+        </a>
+    </div>
+    <div class="row g-3">
+        {% for supplier in suppliers|slice:":6" %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        {% if supplier.image %}
+                        <img src="{{ supplier.image.url }}" alt="{{ supplier.name }}" class="me-3 rounded"
+                             style="width: 48px; height: 48px; object-fit: cover;">
+                        {% else %}
+                        <div class="bg-secondary bg-opacity-10 rounded p-2 me-3">
+                            <i class="bi bi-building text-secondary fs-4"></i>
+                        </div>
+                        {% endif %}
+                        <div>
+                            <h6 class="mb-0 fw-semibold">{{ supplier.name }}</h6>
+                            {% if supplier.country %}
+                            <small class="text-muted"><i class="bi bi-geo-alt me-1"></i>{{ supplier.country }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <p class="card-text text-secondary small">{{ supplier.description|truncatewords:20 }}</p>
+                    <div class="d-flex flex-wrap gap-1 mb-2">
+                        {% for cat in supplier.categories.all %}
+                        <span class="badge bg-light text-dark border small">{{ cat.name }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% if supplier.url %}
+                <div class="card-footer bg-transparent">
+                    <a href="{{ supplier.url }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-globe me-1"></i> Сайт
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% if not categories and not suppliers %}
+<div class="text-center py-5">
+    <i class="bi bi-printer text-muted" style="font-size: 4rem;"></i>
+    <p class="text-muted mt-3 lead">Раздел в процессе наполнения. Материалы появятся здесь в ближайшее время.</p>
+</div>
+{% endif %}
+{% endblock %}

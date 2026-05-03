@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}{{ subsystem.name }} — Разработка — TEAMATRIX{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb" class="bg-light py-2">
+    <div class="container">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:index' %}">Главная</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'development:index' %}">Разработка</a></li>
+            <li class="breadcrumb-item active">{{ subsystem.name }}</li>
+        </ol>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-3 mb-4">
+        <div class="list-group shadow-sm">
+            <div class="list-group-item list-group-item-dark fw-semibold">
+                <i class="bi bi-cpu me-2"></i>Подсистемы
+            </div>
+            {% for sub in all_subsystems %}
+            <a href="{% url 'development:subsystem_detail' sub.slug %}"
+               class="list-group-item list-group-item-action {% if sub.slug == subsystem.slug %}active{% endif %}">
+                <i class="bi {{ sub.icon }} me-2"></i>{{ sub.name }}
+            </a>
+            {% endfor %}
+        </div>
+        <div class="mt-3">
+            <a href="{% url 'development:index' %}" class="btn btn-outline-secondary btn-sm w-100">
+                <i class="bi bi-arrow-left me-1"></i> К разработке
+            </a>
+        </div>
+    </div>
+
+    <div class="col-lg-9">
+        {% if subsystem.image %}
+        <img src="{{ subsystem.image.url }}" class="img-fluid rounded mb-4" alt="{{ subsystem.name }}"
+             style="width: 100%; max-height: 300px; object-fit: cover;">
+        {% endif %}
+
+        <h1 class="mb-3">
+            <i class="bi {{ subsystem.icon }} me-2 text-primary"></i>{{ subsystem.name }}
+        </h1>
+        <p class="lead text-secondary mb-4">{{ subsystem.description }}</p>
+
+        {% if components %}
+        <h3 class="mb-3"><i class="bi bi-box me-2"></i>Комплектующие</h3>
+        <div class="row g-3">
+            {% for comp in components %}
+            <div class="col-md-6">
+                <div class="card h-100 shadow-sm">
+                    {% if comp.image %}
+                    <img src="{{ comp.image.url }}" class="card-img-top" alt="{{ comp.name }}" style="height: 160px; object-fit: cover;">
+                    {% endif %}
+                    <div class="card-body">
+                        <h6 class="card-title fw-semibold">{{ comp.name }}</h6>
+                        <p class="card-text text-secondary small">{{ comp.purpose }}</p>
+                        {% if comp.specs %}
+                        <p class="small mb-1"><strong>Характеристики:</strong></p>
+                        <p class="card-text small text-secondary">{{ comp.specs }}</p>
+                        {% endif %}
+                    </div>
+                    {% if comp.buy_url %}
+                    <div class="card-footer bg-transparent">
+                        <a href="{{ comp.buy_url }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-success">
+                            <i class="bi bi-cart me-1"></i> Заказать
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted">Комплектующие для этой подсистемы ещё не добавлены.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

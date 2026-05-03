@@ -1,0 +1,67 @@
+<!-- Список статей -->
+{% extends "base.html" %}
+
+{% block title %}Каталог статей{% if current_category %} — {{ current_category.name }}{% endif %} — TEAMATRIX{% endblock %}
+
+{% block breadcrumbs %}
+{% include "includes/breadcrumbs.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-3 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white fw-semibold">
+                Категории
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item {% if not current_category %}active{% endif %}">
+                    <a href="{% url 'articles:article_list' %}" class="text-decoration-none {% if not current_category %}text-white{% endif %}">Все статьи</a>
+                </li>
+                {% for cat in categories %}
+                <li class="list-group-item {% if current_category.pk == cat.pk %}active{% endif %}">
+                    <a href="{% url 'articles:category_articles' cat.slug %}" class="text-decoration-none {% if current_category.pk == cat.pk %}text-white{% endif %}">{{ cat.name }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-lg-9">
+        <h1 class="mb-4">
+            {% if current_category %}
+                {{ current_category.name }}
+            {% else %}
+                Каталог статей
+            {% endif %}
+        </h1>
+
+        {% if articles %}
+        <div class="row g-4">
+            {% for article in articles %}
+            <div class="col-md-6 col-xl-4">
+                <div class="card h-100 shadow-sm">
+                    {% if article.image %}
+                    <img src="{{ article.image.url }}" class="card-img-top" alt="{{ article.title }}" style="height: 180px; object-fit: cover;">
+                    {% endif %}
+                    <div class="card-body">
+                        <span class="badge bg-secondary mb-2">{{ article.category.name }}</span>
+                        <h5 class="card-title">{{ article.title }}</h5>
+                        <p class="card-text text-secondary small">{{ article.summary|truncatewords:20 }}</p>
+                    </div>
+                    <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
+                        <small class="text-muted">{{ article.created_at|date:"d.m.Y" }}</small>
+                        <a href="{% url 'articles:article_detail' article.slug %}" class="btn btn-sm btn-outline-primary">Читать</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% include "includes/pagination.html" %}
+        {% else %}
+        <p class="text-muted">В этой категории пока нет статей.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

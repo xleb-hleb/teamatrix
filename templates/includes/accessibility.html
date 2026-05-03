@@ -1,0 +1,35 @@
+<!-- Панель для слабых зрением -->
+<div id="accessibility-panel" class="accessibility-panel" role="region" aria-label="Настройки для слабовидящих">
+    <div class="container d-flex flex-wrap align-items-center gap-3 py-2">
+        <span class="fw-semibold"><i class="bi bi-eye"></i> Версия для слабовидящих</span>
+
+        <div class="d-flex align-items-center gap-1" role="group" aria-label="Размер шрифта">
+            <span class="small fw-medium">Шрифт:</span>
+            <button class="btn btn-sm acc-btn" data-font="normal" title="Обычный шрифт" aria-label="Обычный размер шрифта">А</button>
+            <button class="btn btn-sm acc-btn" data-font="large" title="Крупный шрифт" aria-label="Крупный шрифт" style="font-size:1.15rem;">А</button>
+            <button class="btn btn-sm acc-btn" data-font="xlarge" title="Очень крупный шрифт" aria-label="Очень крупный шрифт" style="font-size:1.35rem;">А</button>
+        </div>
+
+        <div class="d-flex align-items-center gap-1" role="group" aria-label="Цветовая схема">
+            <span class="small fw-medium">Цвет:</span>
+            <button class="btn btn-sm acc-btn" data-theme="normal" title="Обычная цветовая схема">Обычная</button>
+            <button class="btn btn-sm acc-btn" data-theme="bw" title="Чёрным по белому" style="background:#fff;color:#000;border:2px solid #000;">Ч/Б</button>
+            <button class="btn btn-sm acc-btn" data-theme="wb" title="Белым по чёрному" style="background:#000;color:#fff;border:2px solid #a0a0a0;">Б/Ч</button>
+            <button class="btn btn-sm acc-btn" data-theme="blue" title="Тёмно-синий фон" style="background:#0a1628;color:#e8f4ff;border:2px solid #3a6fa8;">Синяя</button>
+        </div>
+
+        <div class="d-flex align-items-center gap-1">
+            <button class="btn btn-sm acc-btn" id="acc-images-toggle" title="Вкл/выкл изображения" aria-label="Переключить отображение картинок">
+                <i class="bi bi-image"></i> Картинки
+            </button>
+        </div>
+
+        <button class="btn btn-sm acc-btn" id="acc-reset" title="Сбросить все настройки доступности" aria-label="Сбросить настройки">
+            <i class="bi bi-arrow-counterclockwise"></i> Сбросить
+        </button>
+
+        <button class="btn btn-sm acc-btn ms-auto" id="acc-close" title="Закрыть панель доступности" aria-label="Закрыть панель">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+</div>

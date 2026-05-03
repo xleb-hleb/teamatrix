@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}{{ thread.title }} — Форум — TEAMATRIX{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb" class="bg-light py-2">
+    <div class="container">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:index' %}">Главная</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'blog:index' %}">Форум</a></li>
+            <li class="breadcrumb-item active">{{ thread.title|truncatechars:50 }}</li>
+        </ol>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+
+        <!-- Заголовок темы -->
+        <div class="mb-4">
+            <h1 class="h3 mb-1">
+                {% if thread.is_pinned %}<span class="badge bg-warning text-dark me-2">Закреплено</span>{% endif %}
+                {{ thread.title }}
+            </h1>
+            <div class="d-flex flex-wrap gap-3 text-muted small">
+                <span><i class="bi bi-person me-1"></i>{{ thread.author.get_full_name|default:thread.author.username }}</span>
+                <span><i class="bi bi-calendar3 me-1"></i>{{ thread.created_at|date:"d.m.Y H:i" }}</span>
+                <span><i class="bi bi-eye me-1"></i>{{ thread.views_count }} просмотров</span>
+            </div>
+            {% if thread.article %}
+            <div class="mt-2">
+                <a href="{% url 'articles:article_detail' thread.article.slug %}" class="badge bg-light text-primary border border-primary text-decoration-none">
+                    <i class="bi bi-book me-1"></i>Статья: {{ thread.article.title|truncatechars:60 }}
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Сообщения -->
+        {% for post in posts %}
+        <div class="card mb-3 shadow-sm" id="post-{{ post.pk }}">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="bg-secondary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center"
+                         style="width: 32px; height: 32px; flex-shrink: 0;">
+                        <i class="bi bi-person text-secondary small"></i>
+                    </div>
+                    <strong class="small">{{ post.author.get_full_name|default:post.author.username }}</strong>
+                </div>
+                <small class="text-muted">{{ post.created_at|date:"d.m.Y H:i" }}</small>
+            </div>
+            <div class="card-body">
+                {% if post.reply_to %}
+                <blockquote class="blockquote border-start border-3 border-secondary ps-3 mb-3 bg-light rounded p-2">
+                    <p class="mb-0 small text-muted">
+                        <strong>{{ post.reply_to.author.get_full_name|default:post.reply_to.author.username }}</strong>
+                        написал(а):
+                    </p>
+                    <p class="mb-0 small text-secondary fst-italic">{{ post.reply_to.content|truncatechars:200 }}</p>
+                </blockquote>
+                {% endif %}
+                <p class="mb-0" style="white-space: pre-wrap;">{{ post.content }}</p>
+            </div>
+            {% if user.is_authenticated %}
+            <div class="card-footer bg-transparent py-1 text-end">
+                <button class="btn btn-sm btn-link text-secondary text-decoration-none reply-btn"
+                        data-post-id="{{ post.pk }}"
+                        data-author="{{ post.author.get_full_name|default:post.author.username }}"
+                        data-preview="{{ post.content|truncatechars:100 }}">
+                    <i class="bi bi-reply me-1"></i>Ответить
+                </button>
+            </div>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="text-center text-muted py-4">Сообщений пока нет.</div>
+        {% endfor %}
+
+        <!-- Форма ответа -->
+        {% if user.is_authenticated %}
+        <div class="card shadow-sm mt-4" id="reply-form">
+            <div class="card-header"><i class="bi bi-chat-left-dots me-2"></i>Написать сообщение</div>
+            <div class="card-body">
+                <form method="post" action="{% url 'blog:add_post' thread.pk %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="reply_to" id="reply-to-id" value="">
+                    <div id="reply-preview" class="d-none mb-3 p-2 bg-light border-start border-3 border-secondary rounded">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <small class="text-muted">
+                                Ответ для: <strong id="reply-author"></strong>
+                                <span class="text-secondary fst-italic ms-2" id="reply-text"></span>
+                            </small>
+                            <button type="button" class="btn-close btn-sm ms-2" id="cancel-reply" aria-label="Отмена"></button>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <textarea name="content" class="form-control" rows="5"
+                                  placeholder="Напишите ваше сообщение..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send me-1"></i>Отправить
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info mt-4">
+            <i class="bi bi-info-circle me-2"></i>
+            <a href="{% url 'accounts:login' %}">Войдите</a>, чтобы участвовать в обсуждении.
+        </div>
+        {% endif %}
+
+        <div class="mt-3">
+            <a href="{% url 'blog:index' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>К форуму
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+document.querySelectorAll('.reply-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const postId = btn.dataset.postId;
+        const author = btn.dataset.author;
+        const preview = btn.dataset.preview;
+
+        document.getElementById('reply-to-id').value = postId;
+        document.getElementById('reply-author').textContent = author;
+        document.getElementById('reply-text').textContent = preview;
+        document.getElementById('reply-preview').classList.remove('d-none');
+        document.getElementById('reply-form').scrollIntoView({behavior: 'smooth'});
+        document.querySelector('#reply-form textarea').focus();
+    });
+});
+
+document.getElementById('cancel-reply')?.addEventListener('click', () => {
+    document.getElementById('reply-to-id').value = '';
+    document.getElementById('reply-preview').classList.add('d-none');
+});
+</script>
+{% endblock %}
