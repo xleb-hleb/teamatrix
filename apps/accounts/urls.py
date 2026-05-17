@@ -11,4 +11,6 @@ urlpatterns = [
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
     path("dashboard/", views.DashboardView.as_view(), name="dashboard"),
     path("profile/edit/", views.ProfileEditView.as_view(), name="profile_edit"),
+    path("bookmark/article/<int:pk>/", views.bookmark_article, name="bookmark_article"),
+    path("bookmark/news/<int:pk>/", views.bookmark_news, name="bookmark_news"),
 ]

@@ -21,7 +21,10 @@ class UserProfile(models.Model):
         "articles.Category", blank=True, verbose_name="Подписки на категории"
     )
     bookmarked_articles = models.ManyToManyField(
-        "articles.Article", blank=True, verbose_name="Закладки"
+        "articles.Article", blank=True, verbose_name="Статьи в закладках"
+    )
+    bookmarked_news = models.ManyToManyField(
+        "core.News", blank=True, verbose_name="Новости в закладках"
     )
     created_at = models.DateTimeField(auto_now_add=True)
 

@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Разметка 3D-модели — TEAMATRIX Admin</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #07101f; color: #e2e8f0; font-family: 'Segoe UI', system-ui, sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+/* Header */
+.adm-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: .6rem 1.2rem;
+    background: #0d1f3c;
+    border-bottom: 1px solid rgba(14,165,233,0.25);
+    flex-shrink: 0;
+}
+.adm-head h1 { font-size: .95rem; letter-spacing: .08em; color: #7dd3fc; }
+.adm-head a { color: #64748b; font-size: .78rem; text-decoration: none; }
+.adm-head a:hover { color: #94a3b8; }
+
+/* Layout */
+.adm-body { display: flex; flex: 1; overflow: hidden; }
+
+/* Sidebar */
+.adm-sidebar {
+    width: 240px; flex-shrink: 0;
+    background: #0a1628;
+    border-right: 1px solid rgba(14,165,233,0.15);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+}
+.adm-sidebar h2 {
+    font-size: .65rem; letter-spacing: .22em; color: #475569;
+    padding: .8rem 1rem .5rem;
+    border-bottom: 1px solid rgba(14,165,233,0.12);
+    text-transform: uppercase;
+}
+.part-list { flex: 1; overflow-y: auto; padding: .4rem 0; }
+.part-item {
+    display: flex; align-items: center; gap: .55rem;
+    padding: .45rem 1rem; cursor: pointer;
+    border-left: 2px solid transparent;
+    transition: background .15s, border-color .15s;
+    user-select: none;
+}
+.part-item:hover { background: rgba(14,165,233,0.06); }
+.part-item.active {
+    background: rgba(14,165,233,0.12);
+    border-left-color: #0ea5e9;
+}
+.part-dot {
+    width: .55rem; height: .55rem; border-radius: 1px; flex-shrink: 0;
+}
+.part-name { font-size: .82rem; flex: 1; }
+.part-coords {
+    font-size: .58rem; color: #475569; font-family: monospace;
+    white-space: nowrap;
+}
+.part-set { color: #22c55e; }
+
+.adm-hint {
+    padding: .8rem 1rem;
+    border-top: 1px solid rgba(14,165,233,0.12);
+    font-size: .68rem; color: #475569; line-height: 1.6;
+}
+.adm-hint b { color: #7dd3fc; }
+
+/* 3D Viewport */
+.adm-viewport { flex: 1; position: relative; overflow: hidden; }
+#ann-canvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
+
+/* Overlay info */
+.adm-info {
+    position: absolute; top: .8rem; left: 50%; transform: translateX(-50%);
+    background: rgba(13,31,60,0.9);
+    border: 1px solid rgba(14,165,233,0.3);
+    border-radius: 3px; padding: .4rem .9rem;
+    font-size: .70rem; color: #94a3b8; letter-spacing: .06em;
+    pointer-events: none;
+}
+#ann-active-label { color: #38bdf8; font-weight: 600; }
+
+/* Loading */
+#ann-loading {
+    position: absolute; inset: 0;
+    background: #07101f;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 10;
+}
+.spin {
+    width: 2.5rem; height: 2.5rem;
+    border: 2px solid rgba(14,165,233,0.2);
+    border-top-color: #0ea5e9;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: .8rem;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+#ann-loading p { font-size: .65rem; color: #475569; letter-spacing: .18em; }
+
+/* Annotation markers in 3D */
+.ann-marker-3d {
+    position: absolute; width: 8px; height: 8px;
+    background: #0ea5e9; border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    box-shadow: 0 0 6px #0ea5e9;
+}
+
+/* No model notice */
+.no-model {
+    display: flex; align-items: center; justify-content: center; height: 100%;
+    color: #475569; font-size: .88rem;
+}
+</style>
+</head>
+<body>
+
+<div class="adm-head">
+    <h1>&#128393; Разметка 3D-модели — TEAMATRIX</h1>
+    <a href="/admin/">&#8592; К панели администратора</a>
+</div>
+
+<div class="adm-body">
+
+    <!-- Sidebar -->
+    <aside class="adm-sidebar">
+        <h2>Части тела</h2>
+        <div class="part-list" id="part-list"></div>
+        <div class="adm-hint">
+            <b>Как разметить:</b><br>
+            1. Выберите часть тела слева<br>
+            2. Кликните на соответствующую зону модели<br>
+            3. Точка сохранится автоматически<br><br>
+            <span style="color:#22c55e;">●</span> — точка задана<br>
+            <span style="color:#475569;">○</span> — точка не задана
+        </div>
+    </aside>
+
+    <!-- 3D Viewport -->
+    <div class="adm-viewport">
+        {% if robot_model %}
+        <canvas id="ann-canvas"></canvas>
+        <div id="ann-loading">
+            <div class="spin"></div>
+            <p>LOADING MODEL…</p>
+        </div>
+        <div class="adm-info">
+            Активная часть: <span id="ann-active-label">не выбрана</span>
+            &nbsp;·&nbsp; Кликните на модель для установки точки
+        </div>
+        {% else %}
+        <div class="no-model">FBX-модель не загружена. Загрузите файл в <a href="/admin/development/robotmodel3d/" style="color:#0ea5e9;">админке</a>.</div>
+        {% endif %}
+    </div>
+
+</div>
+
+{% if robot_model %}
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { FBXLoader }    from 'three/addons/loaders/FBXLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const FBX_URL       = "{{ robot_model.fbx_file.url }}";
+const SAVE_URL      = "{% url 'development:admin_annotate_save' %}";
+const CSRF_TOKEN    = "{{ csrf_token }}";
+const PARTS_DATA    = {{ parts_json|safe }};
+const MESH_TO_PART  = {{ mesh_map_json|safe }};
+
+// ── State ────────────────────────────────────────────────────────────
+let activePart = null;       // { key, label, color }
+const coords   = {};         // key → {x,y,z}
+PARTS_DATA.forEach(p => { if (p.annotation) coords[p.key] = p.annotation; });
+
+// ── Scene ─────────────────────────────────────────────────────────────
+const canvas   = document.getElementById('ann-canvas');
+const viewport = canvas.parentElement;
+
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setClearColor(0x07101f);
+
+const scene  = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 2000);
+
+scene.add(new THREE.AmbientLight(0xffffff, 2));
+const dl = new THREE.DirectionalLight(0xffffff, 0.8);
+dl.position.set(2, 4, 3);
+scene.add(dl);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.enablePan     = false;
+
+// ── Helpers ───────────────────────────────────────────────────────────
+function getPartKey(name) {
+    if (!name) return null;
+    if (MESH_TO_PART[name]) return MESH_TO_PART[name];
+    for (const [k, v] of Object.entries(MESH_TO_PART))
+        if (name.toLowerCase().includes(k.toLowerCase())) return v;
+    return null;
+}
+
+function cssColorToHex(css) {
+    try {
+        const c = document.createElement('canvas');
+        const x = c.getContext('2d');
+        x.fillStyle = css; x.fillRect(0,0,1,1);
+        const d = x.getImageData(0,0,1,1).data;
+        return (d[0]<<16)|(d[1]<<8)|d[2];
+    } catch { return 0x1a3560; }
+}
+
+// ── Load FBX ─────────────────────────────────────────────────────────
+const allMeshes = [];
+new FBXLoader().load(FBX_URL, fbx => {
+    const box    = new THREE.Box3().setFromObject(fbx);
+    const size   = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+    const scale  = 100 / Math.max(size.x, size.y, size.z);
+    fbx.scale.setScalar(scale);
+    fbx.position.sub(center.multiplyScalar(scale));
+
+    camera.position.set(0, size.y * scale * 0.2, size.z * scale * 2.4);
+    camera.lookAt(0, 0, 0);
+    controls.target.set(0, 0, 0);
+    controls.update();
+
+    fbx.traverse(child => {
+        if (!child.isMesh) return;
+        const key = getPartKey(child.name) || getPartKey(child.parent?.name);
+        const part = PARTS_DATA.find(p => p.key === key);
+        child.material = new THREE.MeshLambertMaterial({
+            color: part?.color ? cssColorToHex(part.color) : 0x0d1f3c,
+            flatShading: true,
+        });
+        const edges = new THREE.EdgesGeometry(child.geometry, 12);
+        child.add(new THREE.LineSegments(edges, new THREE.LineBasicMaterial({
+            color: key ? 0x0ea5e9 : 0x1e4a6e
+        })));
+        child._partKey = key;
+        allMeshes.push(child);
+    });
+
+    scene.add(fbx);
+    document.getElementById('ann-loading').style.display = 'none';
+
+    buildMarkers();
+}, undefined, err => {
+    document.getElementById('ann-loading').innerHTML =
+        '<p style="color:#ef4444;">Ошибка загрузки FBX</p>';
+    console.error(err);
+});
+
+// ── Annotation dot markers (HTML overlay) ────────────────────────────
+const markerEls = {};    // key → dom element
+
+function buildMarkers() {
+    for (const p of PARTS_DATA) {
+        const el = document.createElement('div');
+        el.className = 'ann-marker-3d';
+        el.id = 'marker-' + p.key;
+        el.style.display = 'none';
+        viewport.appendChild(el);
+        markerEls[p.key] = el;
+    }
+    updateMarkerPositions();
+}
+
+function updateMarkerPositions() {
+    const rect = canvas.getBoundingClientRect();
+    for (const p of PARTS_DATA) {
+        const el = markerEls[p.key];
+        if (!el) continue;
+        const c = coords[p.key];
+        if (!c) { el.style.display = 'none'; continue; }
+        const v = new THREE.Vector3(c.x, c.y, c.z).project(camera);
+        const sx = (v.x * 0.5 + 0.5) * rect.width;
+        const sy = (-v.y * 0.5 + 0.5) * rect.height;
+        el.style.left = sx + 'px';
+        el.style.top  = sy + 'px';
+        el.style.display = (v.z < 1) ? 'block' : 'none';
+    }
+}
+
+// ── Sidebar ───────────────────────────────────────────────────────────
+function buildSidebar() {
+    const list = document.getElementById('part-list');
+    list.innerHTML = '';
+    for (const p of PARTS_DATA) {
+        const item = document.createElement('div');
+        item.className = 'part-item';
+        item.dataset.key = p.key;
+        const hasCoord = !!coords[p.key];
+        item.innerHTML = `
+            <div class="part-dot" style="background:${p.color};"></div>
+            <span class="part-name">${p.label}</span>
+            <span class="part-coords ${hasCoord ? 'part-set' : ''}">
+                ${hasCoord ? '●' : '○'}
+            </span>`;
+        item.addEventListener('click', () => setActivePart(p));
+        list.appendChild(item);
+    }
+}
+buildSidebar();
+
+function setActivePart(p) {
+    activePart = p;
+    document.querySelectorAll('.part-item').forEach(el => {
+        el.classList.toggle('active', el.dataset.key === p.key);
+    });
+    document.getElementById('ann-active-label').textContent = p.label;
+}
+
+// ── Raycasting / click to set annotation ─────────────────────────────
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+canvas.addEventListener('click', e => {
+    if (!activePart) return;
+    const rect = canvas.getBoundingClientRect();
+    mouse.x =  ((e.clientX - rect.left)  / rect.width)  * 2 - 1;
+    mouse.y = -((e.clientY - rect.top)   / rect.height) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    const hits = raycaster.intersectObjects(allMeshes, false);
+    if (!hits.length) return;
+
+    const pt = hits[0].point;
+    coords[activePart.key] = { x: pt.x, y: pt.y, z: pt.z };
+
+    // Update marker
+    if (markerEls[activePart.key]) {
+        markerEls[activePart.key].style.background = activePart.color || '#0ea5e9';
+    }
+
+    // Update sidebar
+    buildSidebar();
+    setActivePart(activePart);   // keep active
+
+    // Save to server
+    fetch(SAVE_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': CSRF_TOKEN,
+        },
+        body: JSON.stringify({ key: activePart.key, x: pt.x, y: pt.y, z: pt.z }),
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (!d.ok) console.error('Save error', d.error);
+    })
+    .catch(console.error);
+});
+
+// ── Resize ────────────────────────────────────────────────────────────
+function onResize() {
+    const w = viewport.clientWidth;
+    const h = viewport.clientHeight;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+}
+new ResizeObserver(onResize).observe(viewport);
+onResize();
+
+// ── Render loop ───────────────────────────────────────────────────────
+(function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+    updateMarkerPositions();
+})();
+</script>
+{% endif %}
+</body>
+</html>

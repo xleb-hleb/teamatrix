@@ -11,6 +11,7 @@ from .models import (
     RobotBOMItem,
     RobotDrawing,
     RobotElectronics,
+    RobotModel3D,
     RobotReference,
     Subsystem,
 )
@@ -168,12 +169,52 @@ class GitHubLinkAdmin(admin.ModelAdmin):
     actions = [duplicate_objects]
 
 
+@admin.register(RobotModel3D)
+class RobotModel3DAdmin(admin.ModelAdmin):
+    list_display  = ("__str__", "updated_at")
+    readonly_fields = ("updated_at", "fbx_preview", "annotate_link")
+    fieldsets = (
+        (None, {
+            "fields": ("fbx_file", "updated_at", "fbx_preview", "annotate_link"),
+        }),
+        ("Начальное положение в сцене", {
+            "fields": (("init_pos_x", "init_pos_y", "init_pos_z"), "init_rot_y", "init_scale"),
+            "description": (
+                "Смещение и поворот модели применяются после авто-центрирования. "
+                "Модель нормализована к ~100 единицам сцены. "
+                "Поворот Y в градусах (положительный — по часовой стрелке сверху). "
+                "Масштаб: 1.0 = без изменений, 2.0 = вдвое крупнее."
+            ),
+        }),
+    )
+
+    def fbx_preview(self, obj):
+        if obj.fbx_file:
+            return format_html(
+                '<a href="{}" target="_blank">{}</a>',
+                obj.fbx_file.url,
+                obj.fbx_file.name,
+            )
+        return "—"
+    fbx_preview.short_description = "Текущий файл"
+
+    def has_add_permission(self, request):
+        return not RobotModel3D.objects.exists()
+
+    def annotate_link(self, obj):
+        return format_html(
+            '<a class="button" href="{}" target="_blank">&#128393; Открыть инструмент разметки</a>',
+            '/development/admin-tools/annotate/',
+        )
+    annotate_link.short_description = "Разметка частей тела"
+
+
 @admin.register(RobotBodyPart)
 class RobotBodyPartAdmin(admin.ModelAdmin):
     list_display = ("label", "key", "progress_display", "subsystem")
     list_editable = ("subsystem",)
     list_filter = ("subsystem",)
-    fields = ("key", "label", "color", "progress", "subsystem", "description", "controllers")
+    fields = ("key", "label", "color", "progress", "subsystem", "description", "controllers", "mesh_names")
     inlines = [
         RobotElectronicsInline,
         RobotBOMItemInline,

@@ -14,14 +14,12 @@
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
     <link href="{% static 'css/accessibility.css' %}" rel="stylesheet">
     <link href="{% static 'css/futuristic.css' %}" rel="stylesheet">
+    {% block extra_head %}{% endblock %}
 </head>
 <body class="d-flex flex-column min-vh-100">
 
     <!-- Page-load progress bar -->
     <div id="fx-loader" aria-hidden="true"></div>
-
-    <!-- Assembly animation overlay (runs once on load) -->
-    <canvas id="fx-assemble-canvas" aria-hidden="true"></canvas>
 
     <!-- Geometric background canvas (floating hex/tri particles) -->
     <canvas id="fx-bg-canvas" aria-hidden="true"></canvas>

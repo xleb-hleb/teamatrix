@@ -86,6 +86,16 @@ class RobotBodyPart(models.Model):
         verbose_name="Идентификатор части тела",
     )
     label = models.CharField(max_length=100, verbose_name="Название")
+    mesh_names = models.TextField(
+        blank=True,
+        default="",
+        verbose_name="Имена мешей в FBX",
+        help_text=(
+            "Через запятую — имена объектов/мешей в FBX-файле, "
+            "относящихся к этой части тела. "
+            "Используйте точные имена из редактора (Blender/Maya)."
+        ),
+    )
     color = models.CharField(
         max_length=30,
         blank=True,
@@ -107,6 +117,12 @@ class RobotBodyPart(models.Model):
         verbose_name="Связанная подсистема",
     )
     description = models.TextField(blank=True, verbose_name="Описание (для всплывающего окна)")
+    annotation_x = models.FloatField(
+        null=True, blank=True, verbose_name="Аннотация X",
+        help_text="3D-координата точки привязки аннотации (задаётся через инструмент разметки)",
+    )
+    annotation_y = models.FloatField(null=True, blank=True, verbose_name="Аннотация Y")
+    annotation_z = models.FloatField(null=True, blank=True, verbose_name="Аннотация Z")
     controllers = models.TextField(
         blank=True,
         verbose_name="Контроллеры и электроника",
@@ -237,6 +253,56 @@ class RobotAssemblyStep(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class RobotModel3D(models.Model):
+    """Singleton: хранит загруженный FBX-файл робота."""
+
+    fbx_file = models.FileField(
+        upload_to="development/robot3d/",
+        verbose_name="FBX-файл",
+        help_text="Загрузите файл модели в формате .fbx",
+    )
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Обновлено")
+
+    # Initial transform applied after auto-centering in Three.js
+    init_pos_x = models.FloatField(
+        default=0, verbose_name="Позиция X",
+        help_text="Смещение по оси X после авто-центрирования (единицы сцены, модель ~100 ед.)",
+    )
+    init_pos_y = models.FloatField(
+        default=0, verbose_name="Позиция Y",
+        help_text="Смещение по оси Y (вертикаль)",
+    )
+    init_pos_z = models.FloatField(
+        default=0, verbose_name="Позиция Z",
+        help_text="Смещение по оси Z (глубина)",
+    )
+    init_rot_y = models.FloatField(
+        default=0, verbose_name="Поворот Y (°)",
+        help_text="Поворот модели вокруг вертикальной оси в градусах (0 = как в файле)",
+    )
+    init_scale = models.FloatField(
+        default=1.0, verbose_name="Масштаб",
+        help_text="Дополнительный множитель масштаба поверх авто-нормализации (1.0 = без изменений)",
+    )
+
+    class Meta:
+        verbose_name = "3D-модель робота (FBX)"
+        verbose_name_plural = "3D-модель робота (FBX)"
+
+    def __str__(self):
+        return f"3D-модель: {self.fbx_file.name}"
+
+    def save(self, *args, **kwargs):
+        # Singleton: при создании новой записи удаляем старую
+        if not self.pk and RobotModel3D.objects.exists():
+            old = RobotModel3D.objects.first()
+            # Удаляем старый файл с диска
+            if old.fbx_file:
+                old.fbx_file.delete(save=False)
+            old.delete()
+        super().save(*args, **kwargs)
 
 
 class GitHubLink(models.Model):

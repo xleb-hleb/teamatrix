@@ -7,6 +7,12 @@ from .models import User, UserProfile
 class UserProfileInline(admin.StackedInline):
     model = UserProfile
     can_delete = False
+    filter_horizontal = ("bookmarked_articles", "bookmarked_news", "subscribed_categories")
+    fieldsets = (
+        ("Профиль", {"fields": ("avatar", "bio")}),
+        ("Закладки", {"fields": ("bookmarked_articles", "bookmarked_news")}),
+        ("Подписки", {"fields": ("subscribed_categories",)}),
+    )
 
 
 @admin.register(User)

@@ -11,58 +11,613 @@
         Технические решения, подсистемы, комплектующие и процесс разработки гуманоидного робота.
     </p>
 </div>
-
 <!-- ══════════════════════════════════════════════════════
-     Интерактивный робот — Витрувианский стиль + CV детекция
+     3D-модель робота (Three.js FBX)
 ══════════════════════════════════════════════════════ -->
-<section id="robot-section" class="mb-5 py-4 px-3 px-lg-4 bg-dark">
-    <div class="text-center mb-3">
-        <h2 style="color:#7dd3fc;margin:0 0 4px;font-size:1.05rem;letter-spacing:.12em;">
-            <i class="bi bi-robot me-2"></i>КОНСТРУКЦИЯ РОБОТА
-        </h2>
-        <p style="font-size:.70rem;color:#475569;margin:0;letter-spacing:.06em;">
-            OBJECT DETECTION · PART ANALYSIS · Наведите на часть тела
-        </p>
+<section id="robot-section" class="fx-module mb-5 position-relative" style="clip-path:var(--clip-md);background:#07101f;">
+    <span class="fx-corner-tl"></span>
+    <span class="fx-corner-br"></span>
+
+    <div class="d-flex justify-content-between align-items-center mb-3 px-3 px-lg-4 pt-4">
+        <div class="fx-label">
+            <span class="fx-detail-line"></span>
+            <i class="bi bi-box me-1"></i> 3D-КОНСТРУКЦИЯ РОБОТА
+            <span class="fx-tri-accent"></span>
+        </div>
+        <div style="font-family:'Google Sans Code',monospace;font-size:.52rem;letter-spacing:.18em;color:#475569;text-transform:uppercase;">
+            HOVER · CLICK FOR DETAILS
+        </div>
     </div>
 
-    <div id="robot-canvas-wrapper" style="position:relative;width:100%;max-width:860px;margin:0 auto;">
-        <canvas id="robot-canvas" style="display:block;width:100%;cursor:crosshair;"></canvas>
+    {% if robot_model %}
+    <!-- Three.js viewport -->
+    <div id="robot3d-wrap" style="position:relative;width:100%;height:min(70vh,620px);cursor:crosshair;overflow:hidden;">
+        <canvas id="robot3d-canvas" style="display:block;width:100%;height:100%;"></canvas>
+
+        <!-- Loading overlay -->
+        <div id="robot3d-loading"
+             style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+                    background:#07101f;z-index:20;pointer-events:none;">
+            <div style="width:3rem;height:3rem;border:2px solid rgba(14,165,233,0.2);border-top-color:#0ea5e9;
+                        border-radius:50%;animation:spin 1s linear infinite;margin-bottom:1rem;"></div>
+            <div style="font-family:'Google Sans Code',monospace;font-size:.56rem;letter-spacing:.22em;color:#475569;">
+                LOADING MODEL…
+            </div>
+        </div>
     </div>
 
-    <div id="robot-legend" class="d-flex flex-wrap justify-content-center gap-2 mt-3 px-2"></div>
+    <!-- Legend -->
+    <div id="robot3d-legend" class="d-flex flex-wrap justify-content-center gap-2 px-3 py-3"></div>
 
-    <p class="text-center mt-2 mb-0" style="font-size:.68rem;color:#334155;letter-spacing:.05em;">
-        <i class="bi bi-cursor me-1"></i>CLICK TO EXPAND · HOVER FOR STATUS
-    </p>
+    {% else %}
+    <div class="d-flex align-items-center gap-3 px-4 py-5">
+        <i class="bi bi-box" style="font-size:2.5rem;color:var(--fx-blue);opacity:.4;flex-shrink:0;"></i>
+        <div>
+            <p class="mb-1 fw-semibold" style="font-size:.92rem;">FBX-модель не загружена</p>
+        </div>
+    </div>
+    {% endif %}
 </section>
 
 <!-- Tooltip -->
-<div id="robot-tooltip">
-    <div class="tt-card">
-        <div class="tt-head">
-            <i class="bi bi-cpu-fill" style="color:#38bdf8;"></i>
-            <span id="tt-label">—</span>
+<div id="robot-tooltip" style="display:none;position:fixed;z-index:9999;pointer-events:none;">
+    <div class="tt-card"
+         style="background:rgba(7,16,31,0.95);border:1px solid rgba(14,165,233,0.3);border-radius:3px;
+                padding:.8rem 1rem;min-width:200px;backdrop-filter:blur(8px);">
+        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;border-bottom:1px solid rgba(14,165,233,0.2);padding-bottom:.5rem;">
+            <i class="bi bi-cpu-fill" style="color:#38bdf8;font-size:.9rem;"></i>
+            <span id="tt-label" style="font-family:'Oswald',sans-serif;font-size:.85rem;letter-spacing:.06em;color:#e2e8f0;">—</span>
         </div>
-        <div class="tt-body">
-            <div class="tt-row">
-                <span>Прогресс разработки</span>
-                <span id="tt-pct" class="fw-bold"></span>
+        <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.35rem;">
+                <span style="font-size:.70rem;color:#64748b;letter-spacing:.04em;">ПРОГРЕСС</span>
+                <span id="tt-pct" style="font-size:.70rem;font-weight:700;color:#0ea5e9;letter-spacing:.04em;"></span>
             </div>
-            <div class="progress"><div id="tt-bar" class="progress-bar" role="progressbar"></div></div>
-            <p  id="tt-desc"     class="tt-desc"></p>
-            <div id="tt-hint"    class="tt-hint">
-                <i class="bi bi-chevron-double-down me-1"></i>
-                <span id="tt-hint-text">Нажмите, чтобы раскрыть</span>
+            <div style="height:3px;background:rgba(203,213,225,0.15);border-radius:2px;margin-bottom:.5rem;">
+                <div id="tt-bar" style="height:3px;border-radius:2px;background:#0ea5e9;transition:width .3s;width:0%;"></div>
             </div>
+            <p id="tt-desc" style="margin:0;font-size:.75rem;color:#94a3b8;line-height:1.5;"></p>
+            <p style="margin:.4rem 0 0;font-size:.65rem;color:#475569;letter-spacing:.04em;">
+                <i class="bi bi-cursor me-1"></i>Нажмите для раскрытия
+            </p>
         </div>
     </div>
 </div>
+
+{% if robot_model %}
+<!-- Three.js importmap + FBX viewer -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { FBXLoader }  from 'three/addons/loaders/FBXLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ── Data from Django ─────────────────────────────────────────────────
+const PARTS_DATA   = {{ robot_parts_json|safe }};
+const MESH_TO_PART = {{ robot_mesh_map_json|safe }};
+const FBX_URL      = "{{ robot_model.fbx_file.url }}";
+const _INIT        = {{ robot_init_json|safe }};
+const INIT_POS     = { x: _INIT.pos_x, y: _INIT.pos_y, z: _INIT.pos_z };
+const INIT_ROT_Y   = _INIT.rot_y;
+const INIT_SCALE   = _INIT.scale;
+
+// ── Colors ───────────────────────────────────────────────────────────
+const C = {
+    bg:          0x07101f,
+    body:        0x0d1f3c,
+    edge:        0x0ea5e9,
+    edgeFaint:   0x1e4a6e,
+    hover:       0x1a3560,
+    selected:    0x0f2d50,
+    edgeHover:   0x38bdf8,
+    edgeSel:     0x7dd3fc,
+};
+
+// ── Scene setup ──────────────────────────────────────────────────────
+const wrap   = document.getElementById('robot3d-wrap');
+const canvas = document.getElementById('robot3d-canvas');
+
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(C.bg, 1);
+renderer.shadowMap.enabled = false;
+
+const scene  = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 2000);
+
+scene.add(new THREE.AmbientLight(0xffffff, 1.8));
+const d1 = new THREE.DirectionalLight(0xffffff, 0.6);
+d1.position.set(2, 4, 3);
+scene.add(d1);
+const d2 = new THREE.DirectionalLight(0x90c8ff, 0.3);
+d2.position.set(-2, -1, -2);
+scene.add(d2);
+
+// Controls — no autoRotate
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping   = true;
+controls.dampingFactor   = 0.08;
+controls.enablePan       = false;
+controls.minDistance     = 40;
+controls.maxDistance     = 600;
+
+// ── Rest camera state (set after model loads) ────────────────────────
+let restCamPos    = null;
+let restTarget    = null;
+
+// ── FBX reference for annotation coordinate transform ────────────────
+// Annotations are saved in "base world space" (scale=100/max_dim, no rotation,
+// no INIT_POS offset). To correctly project them when INIT_SCALE/ROT/POS
+// change, we convert: annotation → FBX local → current world via localToWorld().
+let fbxRef       = null;
+let fbxCenter    = new THREE.Vector3();
+let fbxBaseScale = 1;
+
+// ── Annotation overlay ───────────────────────────────────────────────
+const annContainer = document.createElement('div');
+annContainer.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:5;opacity:0;transition:opacity .6s;';
+wrap.appendChild(annContainer);
+
+const annEls = {};   // key → { el, coords }
+
+function buildAnnotations() {
+    annContainer.innerHTML = '';
+    for (const [key, data] of Object.entries(PARTS_DATA)) {
+        if (!data.annotation) continue;
+        const pct = data.progress;
+        const pctColor = pct === 0 ? '#ef4444' : pct < 60 ? '#eab308' : '#22c55e';
+        const el = document.createElement('div');
+        el.className = 'ann-frame';
+        el.innerHTML =
+            `<div class="ann-frame-inner">` +
+            `<span class="ann-dot" style="background:${data.color || '#0ea5e9'}"></span>` +
+            `<span class="ann-lbl">${data.label}</span>` +
+            `<span class="ann-pct" style="color:${pctColor}">${pct}%</span>` +
+            `</div>`;
+        annContainer.appendChild(el);
+        annEls[key] = { el, coords: data.annotation };
+    }
+}
+
+function updateAnnotationPositions() {
+    const cw = wrap.clientWidth;
+    const ch = wrap.clientHeight;
+    for (const { el, coords } of Object.values(annEls)) {
+        // Annotations are saved as vectors from robot center (at INIT_SCALE=1, no offset).
+        // Display position = saved_vector * INIT_SCALE + INIT_POS
+        const v = new THREE.Vector3(
+            coords.x * INIT_SCALE + INIT_POS.x,
+            coords.y * INIT_SCALE + INIT_POS.y,
+            coords.z * INIT_SCALE + INIT_POS.z
+        ).project(camera);
+        if (v.z >= 1) { el.style.display = 'none'; continue; }
+        const sx = (v.x *  0.5 + 0.5) * cw;
+        const sy = (v.y * -0.5 + 0.5) * ch;
+        el.style.display = '';
+        el.style.left    = sx + 'px';
+        el.style.top     = sy + 'px';
+    }
+}
+
+// ── Fade / idle / return-to-front ────────────────────────────────────
+let idleTimer       = null;
+let returning       = false;
+let returnStartTime = 0;
+let returnFromPos   = new THREE.Vector3();
+let returnFromTgt   = new THREE.Vector3();
+const IDLE_MS       = 5000;
+const RETURN_MS     = 1500;
+
+function showAnnotations() {
+    annContainer.style.transition = 'opacity .6s';
+    annContainer.style.opacity    = '1';
+}
+function hideAnnotations() {
+    annContainer.style.transition = 'opacity .25s';
+    annContainer.style.opacity    = '0';
+}
+
+controls.addEventListener('start', () => {
+    clearTimeout(idleTimer);
+    idleTimer  = null;
+    returning  = false;
+    hideAnnotations();
+});
+
+controls.addEventListener('end', () => {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+        if (!restCamPos) return;
+        returning       = true;
+        returnStartTime = performance.now();
+        returnFromPos.copy(camera.position);
+        returnFromTgt.copy(controls.target);
+    }, IDLE_MS);
+});
+
+// ── Mesh → part mapping ──────────────────────────────────────────────
+const partMeshes = {};
+
+function getPartKey(name) {
+    if (!name) return null;
+    if (MESH_TO_PART[name]) return MESH_TO_PART[name];
+    for (const [k, v] of Object.entries(MESH_TO_PART))
+        if (name.toLowerCase().includes(k.toLowerCase())) return v;
+    return null;
+}
+
+function makeFlatMat(hexColor) {
+    return new THREE.MeshLambertMaterial({ color: hexColor, flatShading: true });
+}
+function makeEdgeMat(hexColor) {
+    return new THREE.LineBasicMaterial({ color: hexColor });
+}
+
+// ── Load FBX ─────────────────────────────────────────────────────────
+new FBXLoader().load(FBX_URL, (fbx) => {
+
+    const box    = new THREE.Box3().setFromObject(fbx);
+    const size   = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+    const scale  = (100 / Math.max(size.x, size.y, size.z)) * INIT_SCALE;
+    fbx.scale.setScalar(scale);
+    fbx.position.sub(center.multiplyScalar(scale));
+
+    // Store references needed to convert saved annotation coords to world space.
+    // Annotations are saved in admin_annotate.html without INIT_SCALE/ROT/POS,
+    // so we need base scale and center to invert that transform later.
+    fbxRef       = fbx;
+    fbxCenter.copy(center);
+    fbxBaseScale = 100 / Math.max(size.x, size.y, size.z);
+
+    // Apply admin-configured initial transform (after auto-centering)
+    fbx.rotation.y  = THREE.MathUtils.degToRad(INIT_ROT_Y);
+    fbx.position.x += INIT_POS.x;
+    fbx.position.y += INIT_POS.y;
+    fbx.position.z += INIT_POS.z;
+
+    camera.position.set(0, size.y * scale * 0.2, size.z * scale * 2.2);
+    camera.lookAt(0, 0, 0);
+    controls.target.set(0, 0, 0);
+    controls.update();
+
+    // Save rest pose
+    restCamPos = camera.position.clone();
+    restTarget = controls.target.clone();
+
+    fbx.traverse(child => {
+        if (!child.isMesh) return;
+        child.castShadow = child.receiveShadow = false;
+
+        const partKey  = getPartKey(child.name) || getPartKey(child.parent?.name);
+        const partData = partKey ? PARTS_DATA[partKey] : null;
+
+        let fillHex = C.body;
+        if (partData?.color) {
+            try {
+                const tmp = document.createElement('canvas');
+                const ctx = tmp.getContext('2d');
+                ctx.fillStyle = partData.color;
+                ctx.fillRect(0, 0, 1, 1);
+                const d = ctx.getImageData(0, 0, 1, 1).data;
+                fillHex = (d[0] << 16) | (d[1] << 8) | d[2];
+            } catch (_) {}
+        }
+
+        child.material  = makeFlatMat(fillHex);
+        child._baseFill = fillHex;
+
+        const edgeLine = new THREE.LineSegments(
+            new THREE.EdgesGeometry(child.geometry, 12),
+            makeEdgeMat(partKey ? C.edge : C.edgeFaint)
+        );
+        edgeLine._isEdge = true;
+        child.add(edgeLine);
+        child._edgeLine = edgeLine;
+
+        if (partKey) {
+            if (!partMeshes[partKey]) partMeshes[partKey] = { meshes: [], edges: [] };
+            partMeshes[partKey].meshes.push(child);
+            partMeshes[partKey].edges.push(edgeLine);
+        }
+        child._partKey = partKey;
+    });
+
+    scene.add(fbx);
+    document.getElementById('robot3d-loading').style.display = 'none';
+
+    buildLegend();
+    buildAnnotations();
+    // Fade in annotations after model is ready
+    setTimeout(showAnnotations, 200);
+
+}, undefined, (err) => {
+    console.error('FBX load error', err);
+    document.getElementById('robot3d-loading').innerHTML =
+        '<p style="color:#ef4444;font-family:monospace;font-size:.75rem;">Ошибка загрузки FBX-файла</p>';
+});
+
+// ── Legend ────────────────────────────────────────────────────────────
+function buildLegend() {
+    const el = document.getElementById('robot3d-legend');
+    if (!el) return;
+    el.innerHTML = '';
+    for (const [key, data] of Object.entries(PARTS_DATA)) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn-sm';
+        btn.style.cssText =
+            'display:inline-flex;align-items:center;gap:.4rem;' +
+            'border:1px solid rgba(14,165,233,0.25);border-radius:2px;' +
+            'background:rgba(14,165,233,0.06);color:#94a3b8;' +
+            'font-size:.65rem;letter-spacing:.05em;padding:.25rem .55rem;';
+        const pct      = data.progress;
+        const pctColor = pct === 0 ? '#ef4444' : pct < 60 ? '#eab308' : '#22c55e';
+        btn.innerHTML =
+            `<span style="display:inline-block;width:.5rem;height:.5rem;border-radius:1px;background:${data.color || '#0ea5e9'};flex-shrink:0;"></span>` +
+            `${data.label}` +
+            `<span style="color:${pctColor};font-weight:700;">${pct}%</span>`;
+        btn.addEventListener('click',      () => selectPart(key));
+        btn.addEventListener('mouseenter', () => highlightPart(key));
+        btn.addEventListener('mouseleave', () => clearHighlight());
+        el.appendChild(btn);
+    }
+}
+
+// ── Highlight / select ────────────────────────────────────────────────
+let hoveredKey  = null;
+let selectedKey = null;
+
+function highlightPart(key) {
+    if (key === hoveredKey) return;
+    clearHighlight(false);
+    hoveredKey = key;
+    const group = partMeshes[key];
+    if (!group) return;
+    group.meshes.forEach(m => m.material.color.setHex(C.hover));
+    group.edges.forEach(e  => e.material.color.setHex(C.edgeHover));
+}
+
+function clearHighlight(clearHovered = true) {
+    if (hoveredKey && hoveredKey !== selectedKey) {
+        const group = partMeshes[hoveredKey];
+        if (group) {
+            group.meshes.forEach(m => m.material.color.setHex(m._baseFill || C.body));
+            group.edges.forEach(e  => e.material.color.setHex(C.edge));
+        }
+    }
+    if (clearHovered) hoveredKey = null;
+}
+
+function selectPart(key) {
+    if (selectedKey && selectedKey !== key) {
+        const old = partMeshes[selectedKey];
+        if (old) {
+            old.meshes.forEach(m => m.material.color.setHex(m._baseFill || C.body));
+            old.edges.forEach(e  => e.material.color.setHex(C.edge));
+        }
+    }
+    selectedKey = key;
+    const group = partMeshes[key];
+    if (group) {
+        group.meshes.forEach(m => m.material.color.setHex(C.selected));
+        group.edges.forEach(e  => e.material.color.setHex(C.edgeSel));
+    }
+    openPartPanel(key);
+}
+
+// ── Panel ─────────────────────────────────────────────────────────────
+function openPartPanel(key) {
+    const section = document.getElementById('parts-detail-section');
+    if (!section) return;
+    section.style.display = '';
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.querySelectorAll('.part-panel').forEach(p => p.style.display = 'none');
+    const panel = document.getElementById('panel-' + key);
+    if (panel) panel.style.display = '';
+    document.querySelectorAll('#parts-tabs .part-tab').forEach(b => {
+        b.classList.toggle('active', b.dataset.key === key);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const tabsEl = document.getElementById('parts-tabs');
+    if (!tabsEl) return;
+    for (const [key, data] of Object.entries(PARTS_DATA)) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn-sm part-tab';
+        btn.dataset.key = key;
+        const pct      = data.progress;
+        const pctColor = pct === 0 ? '#dc2626' : pct < 60 ? '#ca8a04' : '#16a34a';
+        btn.style.cssText = 'border-radius:2px;font-size:.78rem;letter-spacing:.04em;';
+        btn.innerHTML = `${data.label} <span style="color:${pctColor};font-weight:700;">${pct}%</span>`;
+        btn.addEventListener('click', () => {
+            selectPart(key);
+            document.querySelectorAll('#parts-tabs .part-tab').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        });
+        tabsEl.appendChild(btn);
+    }
+});
+
+// ── Raycasting ────────────────────────────────────────────────────────
+const raycaster = new THREE.Raycaster();
+const mouse     = new THREE.Vector2(-10, -10);
+const tooltip   = document.getElementById('robot-tooltip');
+let lastHitKey  = null;
+
+function updateMouse(e) {
+    const rect = canvas.getBoundingClientRect();
+    mouse.x =  ((e.clientX - rect.left) / rect.width)  * 2 - 1;
+    mouse.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
+}
+
+canvas.addEventListener('mousemove', e => {
+    updateMouse(e);
+    const meshes = [];
+    scene.traverse(c => { if (c.isMesh && !c._isEdge) meshes.push(c); });
+    raycaster.setFromCamera(mouse, camera);
+    const hits = raycaster.intersectObjects(meshes, false);
+    if (hits.length) {
+        const key = hits[0].object._partKey;
+        if (key && key !== lastHitKey) { lastHitKey = key; highlightPart(key); showTooltip(key, e.clientX, e.clientY); }
+        else if (!key && lastHitKey)   { lastHitKey = null; clearHighlight(); hideTooltip(); }
+        if (key) moveTooltip(e.clientX, e.clientY);
+        canvas.style.cursor = key ? 'pointer' : 'crosshair';
+    } else {
+        if (lastHitKey) { clearHighlight(); lastHitKey = null; hideTooltip(); }
+        canvas.style.cursor = 'crosshair';
+    }
+});
+
+canvas.addEventListener('mouseleave', () => { clearHighlight(); lastHitKey = null; hideTooltip(); });
+
+canvas.addEventListener('click', e => {
+    updateMouse(e);
+    const meshes = [];
+    scene.traverse(c => { if (c.isMesh && !c._isEdge) meshes.push(c); });
+    raycaster.setFromCamera(mouse, camera);
+    const hits = raycaster.intersectObjects(meshes, false);
+    if (hits.length) {
+        const key = hits[0].object._partKey;
+        if (key) selectPart(key);
+    }
+});
+
+// ── Tooltip ───────────────────────────────────────────────────────────
+function showTooltip(key, cx, cy) {
+    const data = PARTS_DATA[key];
+    if (!data || !tooltip) return;
+    document.getElementById('tt-label').textContent  = data.label;
+    document.getElementById('tt-pct').textContent    = data.progress + '%';
+    document.getElementById('tt-bar').style.width    = data.progress + '%';
+    document.getElementById('tt-desc').textContent   = data.description || '';
+    const pct      = data.progress;
+    const barColor = pct === 0 ? '#ef4444' : pct < 60 ? '#eab308' : '#22c55e';
+    document.getElementById('tt-bar').style.background = barColor;
+    tooltip.style.display = 'block';
+    moveTooltip(cx, cy);
+}
+function moveTooltip(cx, cy) {
+    if (!tooltip) return;
+    tooltip.style.left = (cx + 18) + 'px';
+    tooltip.style.top  = (cy - 20) + 'px';
+}
+function hideTooltip() { if (tooltip) tooltip.style.display = 'none'; }
+
+// ── Resize ────────────────────────────────────────────────────────────
+function onResize() {
+    const w = wrap.clientWidth;
+    const h = wrap.clientHeight;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+}
+new ResizeObserver(onResize).observe(wrap);
+onResize();
+
+// ── Render loop ───────────────────────────────────────────────────────
+function easeInOut(t) { return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; }
+
+function animate() {
+    requestAnimationFrame(animate);
+
+    if (returning && restCamPos) {
+        const t    = Math.min((performance.now() - returnStartTime) / RETURN_MS, 1);
+        const ease = easeInOut(t);
+        camera.position.lerpVectors(returnFromPos, restCamPos, ease);
+        controls.target.lerpVectors(returnFromTgt,  restTarget,  ease);
+        camera.lookAt(controls.target);
+        if (t >= 1) {
+            returning = false;
+            showAnnotations();
+        }
+    }
+
+    controls.update();
+    renderer.render(scene, camera);
+    updateAnnotationPositions();
+}
+animate();
+</script>
+
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+#parts-tabs .part-tab.active {
+    background: rgba(14,165,233,0.15);
+    border-color: rgba(14,165,233,0.5);
+    color: #7dd3fc;
+}
+/* ── Annotation frames ── */
+.ann-frame {
+    position: absolute;
+    transform: translate(-50%, -110%);
+    pointer-events: none;
+}
+.ann-frame-inner {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .22rem .5rem;
+    background: rgba(7, 16, 31, 0.82);
+    border: 1px solid rgba(14, 165, 233, 0.55);
+    backdrop-filter: blur(6px);
+    font-family: 'Google Sans Code', monospace;
+    font-size: .60rem;
+    white-space: nowrap;
+    letter-spacing: .05em;
+}
+/* Corner brackets */
+.ann-frame-inner::before,
+.ann-frame-inner::after {
+    content: '';
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-color: #0ea5e9;
+    border-style: solid;
+}
+.ann-frame-inner::before { top: -2px;    left: -2px;  border-width: 2px 0 0 2px; }
+.ann-frame-inner::after  { bottom: -2px; right: -2px; border-width: 0 2px 2px 0; }
+/* Connector dot below label */
+.ann-frame::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 100%;
+    transform: translateX(-50%);
+    width: 1px;
+    height: 8px;
+    background: rgba(14, 165, 233, 0.6);
+}
+.ann-dot {
+    display: inline-block;
+    width: .45rem;
+    height: .45rem;
+    border-radius: 1px;
+    flex-shrink: 0;
+}
+.ann-lbl { color: #e2e8f0; }
+.ann-pct { font-weight: 700; }
+</style>
+{% endif %}
 
 <!-- ══════════════════════════════════════════════════════
      Детали частей тела — раскрывается при клике по роботу
 ══════════════════════════════════════════════════════ -->
 {% if robot_parts %}
-<section id="parts-detail-section" class="mb-5" style="display:none;">
+<section id="parts-detail-section" class="fx-module mb-5 position-relative" style="display:none;clip-path:var(--clip-md);">
+    <span class="fx-corner-tl"></span>
+    <span class="fx-corner-br"></span>
 
     <!-- Вкладки-кнопки -->
     <div id="parts-tabs" class="d-flex flex-wrap gap-2 mb-4" role="tablist"></div>
@@ -72,7 +627,7 @@
     <div id="panel-{{ part.key }}" class="part-panel" style="display:none;" role="tabpanel">
 
         <!-- Шапка панели -->
-        <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom">
+        <div class="d-flex align-items-center gap-3 mb-3 pb-3" style="border-bottom:1px solid rgba(203,213,225,0.5);">
             {% if part.color %}
             <div style="width:12px;height:12px;border-radius:3px;background:{{ part.color }};flex-shrink:0;"></div>
             {% endif %}
@@ -237,28 +792,37 @@
 
 <!-- Subsystems -->
 {% if subsystems %}
-<section class="mb-5">
-    <h2 class="mb-4"><i class="bi bi-cpu me-2"></i>Подсистемы</h2>
+<section class="fx-module mb-5 position-relative" style="clip-path:var(--clip-md);">
+    <span class="fx-corner-tl"></span>
+    <span class="fx-corner-br"></span>
+    <div class="fx-secnum">02</div>
+    <div class="fx-label mb-4">
+        <span class="fx-detail-line"></span>
+        <i class="bi bi-cpu me-1"></i> ПОДСИСТЕМЫ
+        <span class="fx-tri-accent"></span>
+    </div>
     <div class="row g-4">
         {% for sub in subsystems %}
         <div class="col-md-6 col-lg-4">
-            <div class="card h-100 shadow-sm">
+            <div class="card fx-glass h-100 position-relative" style="clip-path:var(--clip-sm);">
+                <span class="fx-corner-tl"></span>
                 {% if sub.image %}
-                <img src="{{ sub.image.url }}" class="card-img-top" alt="{{ sub.name }}" style="height:200px;object-fit:cover;">
+                <img src="{{ sub.image.url }}" class="card-img-top" alt="{{ sub.name }}" style="height:180px;object-fit:cover;">
                 {% else %}
-                <div class="bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" style="height:140px;">
-                    <i class="bi {{ sub.icon }} text-primary" style="font-size:3rem;"></i>
+                <div class="d-flex align-items-center justify-content-center" style="height:120px;background:rgba(14,165,233,0.07);">
+                    <i class="bi {{ sub.icon }}" style="font-size:3rem;color:var(--fx-blue);opacity:.5;"></i>
                 </div>
                 {% endif %}
                 <div class="card-body">
-                    <h5 class="card-title">{{ sub.name }}</h5>
-                    <p class="card-text text-secondary">{{ sub.description|truncatewords:20 }}</p>
+                    <h5 class="card-title fw-bold" style="font-size:1rem;">{{ sub.name }}</h5>
+                    <p class="card-text text-secondary small">{{ sub.description|truncatewords:20 }}</p>
                     {% if sub.components.all %}
-                    <p class="mb-0"><small class="text-muted"><i class="bi bi-box me-1"></i>Комплектующих: {{ sub.components.count }}</small></p>
+                    <p class="mb-0 small text-muted"><i class="bi bi-box me-1"></i>Комплектующих: {{ sub.components.count }}</p>
                     {% endif %}
                 </div>
-                <div class="card-footer bg-transparent">
-                    <a href="{% url 'development:subsystem_detail' sub.slug %}" class="btn btn-sm btn-outline-primary">Подробнее</a>
+                <div class="card-footer bg-transparent" style="border-top:1px solid rgba(203,213,225,0.5);">
+                    <a href="{% url 'development:subsystem_detail' sub.slug %}"
+                       class="btn btn-sm btn-outline-primary" style="border-radius:2px;font-size:.78rem;">Подробнее</a>
                 </div>
             </div>
         </div>
@@ -268,20 +832,29 @@
 {% endif %}
 
 {% if dev_sections %}
-<section class="mb-5">
-    <h2 class="mb-4"><i class="bi bi-diagram-3 me-2"></i>Процесс разработки</h2>
+<section class="fx-module mb-5 position-relative" style="clip-path:var(--clip-md);">
+    <span class="fx-corner-tl"></span>
+    <span class="fx-corner-br"></span>
+    <div class="fx-secnum">03</div>
+    <div class="fx-label mb-4">
+        <span class="fx-detail-line"></span>
+        <i class="bi bi-diagram-3 me-1"></i> ПРОЦЕСС РАЗРАБОТКИ
+        <span class="fx-tri-accent"></span>
+    </div>
     <div class="row g-4">
         {% for section in dev_sections %}
         <div class="col-md-6">
-            <div class="card h-100 shadow-sm">
+            <div class="card fx-glass h-100 position-relative" style="clip-path:var(--clip-sm);">
+                <span class="fx-corner-tl"></span>
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-3">
-                        <div class="bg-primary bg-opacity-10 rounded p-2 me-3">
-                            <i class="bi {{ section.icon }} text-primary fs-4"></i>
+                        <div class="me-3 d-flex align-items-center justify-content-center"
+                             style="width:42px;height:42px;background:rgba(14,165,233,0.10);border:1px solid rgba(14,165,233,0.2);border-radius:3px;flex-shrink:0;">
+                            <i class="bi {{ section.icon }}" style="font-size:1.3rem;color:var(--fx-blue);"></i>
                         </div>
-                        <h5 class="card-title mb-0">{{ section.title }}</h5>
+                        <h5 class="card-title mb-0 fw-bold" style="font-size:.98rem;">{{ section.title }}</h5>
                     </div>
-                    <p class="card-text text-secondary">{{ section.content|truncatewords:40 }}</p>
+                    <p class="card-text text-secondary small">{{ section.content|truncatewords:40 }}</p>
                 </div>
             </div>
         </div>
@@ -291,59 +864,81 @@
 {% endif %}
 
 {% if ready_solutions %}
-<section class="mb-5">
-    <h2 class="mb-4"><i class="bi bi-check2-circle me-2"></i>Готовые решения</h2>
-    <div class="list-group shadow-sm">
-        {% for sol in ready_solutions %}
-        <div class="list-group-item list-group-item-action">
-            <div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <h6 class="mb-1 fw-semibold">{{ sol.name }}</h6>
-                    <p class="mb-0 text-secondary small">{{ sol.description }}</p>
-                </div>
-                {% if sol.url %}
-                <a href="{{ sol.url }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary ms-3 flex-shrink-0">
-                    <i class="bi bi-box-arrow-up-right"></i>
-                </a>
-                {% endif %}
-            </div>
-        </div>
-        {% endfor %}
+<section class="fx-module mb-5 position-relative" style="clip-path:var(--clip-md);">
+    <span class="fx-corner-tl"></span>
+    <span class="fx-corner-br"></span>
+    <div class="fx-secnum">04</div>
+    <div class="fx-label mb-4">
+        <span class="fx-detail-line"></span>
+        <i class="bi bi-check2-circle me-1"></i> ГОТОВЫЕ РЕШЕНИЯ
+        <span class="fx-tri-accent"></span>
     </div>
+    <ul class="list-unstyled mb-0">
+        {% for sol in ready_solutions %}
+        <li class="d-flex justify-content-between align-items-start py-3"
+            style="border-bottom:1px solid rgba(203,213,225,0.4);">
+            <div>
+                <h6 class="mb-1 fw-semibold" style="font-size:.95rem;">{{ sol.name }}</h6>
+                <p class="mb-0 text-secondary small">{{ sol.description }}</p>
+            </div>
+            {% if sol.url %}
+            <a href="{{ sol.url }}" target="_blank" rel="noopener"
+               class="btn btn-sm btn-outline-secondary ms-3 flex-shrink-0" style="border-radius:2px;">
+                <i class="bi bi-box-arrow-up-right"></i>
+            </a>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
 </section>
 {% endif %}
 
 {% if github_models or github_software %}
-<section class="mb-5">
-    <h2 class="mb-4"><i class="bi bi-github me-2"></i>GitHub репозитории</h2>
+<section class="fx-module mb-5 position-relative" style="clip-path:var(--clip-md);">
+    <span class="fx-corner-tl"></span>
+    <span class="fx-corner-br"></span>
+    <div class="fx-secnum">05</div>
+    <div class="fx-label mb-4">
+        <span class="fx-detail-line"></span>
+        <i class="bi bi-github me-1"></i> GITHUB РЕПОЗИТОРИИ
+        <span class="fx-tri-accent"></span>
+    </div>
     <div class="row g-4">
         {% if github_models %}
         <div class="col-md-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-dark text-white"><i class="bi bi-box-seam me-2"></i>3D-модели</div>
-                <div class="list-group list-group-flush">
-                    {% for link in github_models %}
-                    <a href="{{ link.url }}" target="_blank" rel="noopener" class="list-group-item list-group-item-action">
-                        <div class="fw-semibold">{{ link.title }}</div>
-                        {% if link.description %}<small class="text-muted">{{ link.description }}</small>{% endif %}
-                    </a>
-                    {% endfor %}
+            <div class="fx-glass-heavy p-3 h-100 position-relative" style="clip-path:var(--clip-sm);">
+                <span class="fx-corner-tl"></span>
+                <div class="fx-label mb-3">
+                    <span class="fx-detail-line"></span>
+                    <i class="bi bi-box-seam me-1"></i> 3D-МОДЕЛИ
                 </div>
+                {% for link in github_models %}
+                <a href="{{ link.url }}" target="_blank" rel="noopener"
+                   class="d-block py-2 text-decoration-none fw-semibold small"
+                   style="border-bottom:1px solid rgba(203,213,225,0.4);color:var(--fx-blue);">
+                    <i class="bi bi-arrow-right-circle me-2 opacity-60"></i>{{ link.title }}
+                    {% if link.description %}<br><small class="text-muted fw-normal">{{ link.description }}</small>{% endif %}
+                </a>
+                {% endfor %}
             </div>
         </div>
         {% endif %}
         {% if github_software %}
         <div class="col-md-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-dark text-white"><i class="bi bi-code-slash me-2"></i>Программные решения</div>
-                <div class="list-group list-group-flush">
-                    {% for link in github_software %}
-                    <a href="{{ link.url }}" target="_blank" rel="noopener" class="list-group-item list-group-item-action">
-                        <div class="fw-semibold">{{ link.title }}</div>
-                        {% if link.description %}<small class="text-muted">{{ link.description }}</small>{% endif %}
-                    </a>
-                    {% endfor %}
+            <div class="fx-glass-heavy p-3 h-100 position-relative" style="clip-path:var(--clip-sm);">
+                <span class="fx-corner-tl"></span>
+                <div class="fx-label mb-3">
+                    <span class="fx-detail-line"></span>
+                    <i class="bi bi-code-slash me-1"></i> ПРОГРАММНЫЕ РЕШЕНИЯ
                 </div>
+                {% for link in github_software %}
+                <a href="{{ link.url }}" target="_blank" rel="noopener"
+                   class="d-block py-2 text-decoration-none fw-semibold small"
+                   style="border-bottom:1px solid rgba(203,213,225,0.4);color:var(--fx-blue);">
+                    <i class="bi bi-arrow-right-circle me-2 opacity-60"></i>{{ link.title }}
+                    {% if link.description %}<br><small class="text-muted fw-normal">{{ link.description }}</small>{% endif %}
+                </a>
+                {% endfor %}
             </div>
         </div>
         {% endif %}
@@ -352,862 +947,10 @@
 {% endif %}
 
 {% if not subsystems and not dev_sections and not ready_solutions %}
-<div class="text-center py-5">
-    <i class="bi bi-gear text-muted" style="font-size:4rem;"></i>
-    <p class="text-muted mt-3 lead">Раздел находится в разработке. Материалы появятся здесь в ближайшее время.</p>
+<div class="fx-glass text-center py-5 px-4" style="border-radius:4px;">
+    <i class="bi bi-gear d-block mb-3" style="font-size:4rem;opacity:.2;"></i>
+    <p class="text-secondary lead mb-0">Раздел находится в разработке. Материалы появятся здесь в ближайшее время.</p>
 </div>
 {% endif %}
 
-<!-- ══════════════════════════════════════════════════════
-     Витрувианский робот — 2D Canvas + CV Detection
-══════════════════════════════════════════════════════ -->
-<script>
-(function () {
-'use strict';
-
-const PARTS_DATA = {{ robot_parts_json|safe }};
-const DEV_INDEX  = "{% url 'development:index' %}";
-const DEF_LABELS = {
-    head:'Голова', torso:'Туловище',
-    left_arm:'Левая рука', right_arm:'Правая рука',
-    pelvis:'Таз', left_leg:'Левая нога', right_leg:'Правая нога'
-};
-// Fallback progress values for demo when server provides no data
-const DEF_PROGRESS = { head:72, torso:58, left_arm:45, right_arm:45,
-                       pelvis:61, left_leg:38, right_leg:38 };
-
-function getInfo(key) {
-    const d = PARTS_DATA[key] || {};
-    return {
-        label:       d.label       || DEF_LABELS[key] || key,
-        progress:    Math.min(100, Math.max(0,
-                         d.progress != null ? (d.progress|0) : (DEF_PROGRESS[key]|0))),
-        description: d.description || '',
-        url:         d.url         || DEV_INDEX
-    };
-}
-function pctColor(p) {
-    if (p === 0)  return '#dc3545';
-    if (p <  30)  return '#fd7e14';
-    if (p <  60)  return '#ffc107';
-    if (p <  85)  return '#20c997';
-    return '#198754';
-}
-function hexAlpha(hex, a) {
-    const r = parseInt(hex.slice(1,3),16);
-    const g = parseInt(hex.slice(3,5),16);
-    const b = parseInt(hex.slice(5,7),16);
-    return `rgba(${r},${g},${b},${a})`;
-}
-
-// ── Canvas ───────────────────────────────────────────────
-const wrapper = document.getElementById('robot-canvas-wrapper');
-const canvas  = document.getElementById('robot-canvas');
-const ctx     = canvas.getContext('2d');
-
-function resize() {
-    const w = wrapper.clientWidth || 640;
-    canvas.width  = w;
-    canvas.height = Math.round(w * 1.05);  // taller for full 8-head figure
-}
-resize();
-new ResizeObserver(resize).observe(wrapper);
-
-// ── Keypoints — strict 8-head proportions (H=0.125 per head) ────
-// Shoulder width = 2 head heights = 0.25 span (±0.131 in x, adjusted for 1.05 aspect)
-// Legs = bottom 4 heads = y 0.500→1.000
-const J = {
-    // HEAD (center y=0.058, radius ≈ 0.058, chin at y≈0.118)
-    HEAD:       [0.500, 0.058],
-    HEAD_TL:    [0.458, 0.012], HEAD_TR:    [0.542, 0.012],
-    HEAD_L:     [0.440, 0.058], HEAD_R:     [0.560, 0.058],
-    BROW_L:     [0.463, 0.040], BROW_R:     [0.537, 0.040],
-    EYE_L:      [0.468, 0.052], EYE_R:      [0.532, 0.052],
-    NOSE:       [0.500, 0.072],
-    L_JAW:      [0.455, 0.105], R_JAW:      [0.545, 0.105],
-    CHIN:       [0.500, 0.118],
-
-    // NECK
-    NECK_T:     [0.500, 0.126],
-    NECK_L:     [0.476, 0.132], NECK_R:     [0.524, 0.132],
-    NECK_B:     [0.500, 0.158],
-    NECK_BL:    [0.474, 0.162], NECK_BR:    [0.526, 0.162],
-
-    // SHOULDERS / CLAVICLES / TRAPEZIUS
-    L_CLAV_I:   [0.448, 0.168], R_CLAV_I:   [0.552, 0.168],
-    L_CLAV_O:   [0.378, 0.172], R_CLAV_O:   [0.622, 0.172],
-    L_ACRM:     [0.362, 0.185], R_ACRM:     [0.638, 0.185],
-    L_TRAP_M:   [0.420, 0.158], R_TRAP_M:   [0.580, 0.158],
-    L_TRAP_B:   [0.388, 0.175], R_TRAP_B:   [0.612, 0.175],
-
-    // CHEST PANELS
-    STERN_T:    [0.500, 0.168],
-    L_PEC_TI:   [0.448, 0.195], R_PEC_TI:   [0.552, 0.195],
-    L_PEC_TO:   [0.380, 0.205], R_PEC_TO:   [0.620, 0.205],
-    L_PEC_BI:   [0.452, 0.258], R_PEC_BI:   [0.548, 0.258],
-    L_PEC_BO:   [0.395, 0.252], R_PEC_BO:   [0.605, 0.252],
-    STERN_M:    [0.500, 0.258],
-
-    // DELTOIDS
-    L_DELT_T:   [0.356, 0.182], R_DELT_T:   [0.644, 0.182],
-    L_DELT_O:   [0.335, 0.218], R_DELT_O:   [0.665, 0.218],
-    L_DELT_B:   [0.348, 0.262], R_DELT_B:   [0.652, 0.262],
-    L_AXILLA:   [0.372, 0.240], R_AXILLA:   [0.628, 0.240],
-
-    // ABDOMEN (navel at 3rd head = y=0.375)
-    SOLAR:      [0.500, 0.285],
-    ABS_TL:     [0.468, 0.296], ABS_TR:     [0.532, 0.296],
-    ABS_ML:     [0.465, 0.332], ABS_MR:     [0.535, 0.332],
-    ABS_BL:     [0.462, 0.368], ABS_BR:     [0.538, 0.368],
-    NAVEL:      [0.500, 0.378],
-    L_OBL_T:    [0.415, 0.295], R_OBL_T:    [0.585, 0.295],
-    L_OBL_B:    [0.405, 0.388], R_OBL_B:    [0.595, 0.388],
-    L_WAIST:    [0.418, 0.400], R_WAIST:    [0.582, 0.400],
-
-    // PELVIS / HIPS (crotch at 4th head ≈ y=0.480, Loomis proportions)
-    L_ILIAC:    [0.395, 0.432], R_ILIAC:    [0.605, 0.432],
-    L_ILIAC_B:  [0.390, 0.458], R_ILIAC_B:  [0.610, 0.458],
-    PUBIS:      [0.500, 0.478],
-    L_HIP:      [0.392, 0.498], R_HIP:      [0.608, 0.498],
-    GROIN:      [0.500, 0.490],
-
-    // UPPER ARMS
-    L_ARM_TI:   [0.370, 0.225], R_ARM_TI:   [0.630, 0.225],
-    L_ARM_TO:   [0.340, 0.228], R_ARM_TO:   [0.660, 0.228],
-    L_ARM_MI:   [0.308, 0.318], R_ARM_MI:   [0.692, 0.318],
-    L_ARM_MO:   [0.275, 0.312], R_ARM_MO:   [0.725, 0.312],
-    L_ELBOW_I:  [0.252, 0.388], R_ELBOW_I:  [0.748, 0.388],
-    L_ELBOW:    [0.238, 0.382], R_ELBOW:    [0.762, 0.382],
-    L_ELBOW_O:  [0.228, 0.375], R_ELBOW_O:  [0.772, 0.375],
-
-    // FOREARMS
-    L_FRA_TI:   [0.258, 0.402], R_FRA_TI:   [0.742, 0.402],
-    L_FRA_TO:   [0.232, 0.398], R_FRA_TO:   [0.768, 0.398],
-    L_FRA_MI:   [0.208, 0.455], R_FRA_MI:   [0.792, 0.455],
-    L_FRA_MO:   [0.185, 0.450], R_FRA_MO:   [0.815, 0.450],
-    L_WRIST_I:  [0.188, 0.515], R_WRIST_I:  [0.812, 0.515],
-    L_WRIST_O:  [0.168, 0.510], R_WRIST_O:  [0.832, 0.510],
-
-    // HANDS
-    L_HAND:     [0.175, 0.550], R_HAND:     [0.825, 0.550],
-    L_THUMB:    [0.198, 0.538], R_THUMB:    [0.802, 0.538],
-    L_FING:     [0.162, 0.570], R_FING:     [0.838, 0.570],
-
-    // THIGHS — straight down from hip joint, 5th–6th head
-    L_QD_TI:    [0.410, 0.512], R_QD_TI:    [0.590, 0.512],
-    L_QD_TO:    [0.378, 0.516], R_QD_TO:    [0.622, 0.516],
-    L_QD_MI:    [0.402, 0.598], R_QD_MI:    [0.598, 0.598],
-    L_QD_MO:    [0.366, 0.594], R_QD_MO:    [0.634, 0.594],
-    L_HAM_O:    [0.358, 0.616], R_HAM_O:    [0.642, 0.616],
-    L_HAM_I:    [0.390, 0.618], R_HAM_I:    [0.610, 0.618],
-
-    // KNEES — 6th head ≈ y=0.716 (Loomis: knee at ⅜ leg from top)
-    L_KNEE_I:   [0.400, 0.702], R_KNEE_I:   [0.600, 0.702],
-    L_KNEECAP:  [0.385, 0.716], R_KNEECAP:  [0.615, 0.716],
-    L_KNEE_O:   [0.368, 0.708], R_KNEE_O:   [0.632, 0.708],
-
-    // SHINS / CALVES — shin falls nearly vertical below knee
-    L_SHN_T:    [0.382, 0.728], R_SHN_T:    [0.618, 0.728],
-    L_CALF_O:   [0.360, 0.778], R_CALF_O:   [0.640, 0.778],
-    L_CALF_I:   [0.386, 0.776], R_CALF_I:   [0.614, 0.776],
-    L_SHN_B:    [0.372, 0.845], R_SHN_B:    [0.628, 0.845],
-    // Ankle — outer lower, inner higher (anatomically correct)
-    L_ANK_O:    [0.364, 0.865], R_ANK_O:    [0.636, 0.865],
-    L_ANK_I:    [0.382, 0.872], R_ANK_I:    [0.618, 0.872],
-
-    // FEET — pointing OUTWARD ~20° (classic academic pose)
-    // Left:  heel on medial/inner side, ball & toe sweep outward (leftward)
-    // Right: heel on medial/inner side, ball & toe sweep outward (rightward)
-    L_HEEL:     [0.390, 0.892], R_HEEL:     [0.610, 0.892],
-    L_BALL:     [0.350, 0.938], R_BALL:     [0.650, 0.938],
-    L_TOE:      [0.318, 0.952], R_TOE:      [0.682, 0.952],
-};
-
-// ── Per-joint drift — coherent groups, REDUCED amplitude ────────
-const DR = {};
-(function() {
-    const groups = {
-        head:   [0.00,0.20], neck:   [0.05,0.25],
-        lArm:   [0.80,0.60], rArm:   [1.60,1.20],
-        torso:  [0.30,0.10], pelvis: [0.35,0.15],
-        lLeg:   [1.10,0.90], rLeg:   [2.20,1.80],
-    };
-    const grpOf = k => {
-        if (/^HEAD|^BROW|^EYE|^NOSE|JAW|CHIN/.test(k))    return 'head';
-        if (/^NECK|^STERN|CLAV|ACRM|TRAP/.test(k))         return 'neck';
-        if (/^L_(DELT|AXILLA|ARM|ELBOW|FRA|WRIST|HAND|THUMB|FING)/.test(k)) return 'lArm';
-        if (/^R_(DELT|AXILLA|ARM|ELBOW|FRA|WRIST|HAND|THUMB|FING)/.test(k)) return 'rArm';
-        if (/^SOLAR|^ABS|^NAVEL|^L_OBL|^R_OBL|PEC|WAIST/.test(k)) return 'torso';
-        if (/^L_ILIAC|^R_ILIAC|^PUBIS|^L_HIP|^R_HIP|^GROIN/.test(k)) return 'pelvis';
-        if (/^L_(QD|HAM|KNEE|SHN|CALF|ANK|HEEL|BALL|TOE)/.test(k)) return 'lLeg';
-        return 'rLeg';
-    };
-    Object.keys(J).forEach(k => {
-        const [gx,gy] = groups[grpOf(k)];
-        const n = (v,s) => v+(Math.random()-0.5)*s;
-        DR[k] = [n(gx,0.3), n(gy,0.3),
-                 0.18+Math.random()*0.18, 0.14+Math.random()*0.16,
-                 0.0010+Math.random()*0.0008];  // ~2× smaller than before
-    });
-})();
-
-// ── Skeleton — structural centerlines ────────────────────
-const BONES = [
-    ['CHIN','NECK_T'],['NECK_T','NECK_B'],
-    ['NECK_B','STERN_T'],['STERN_T','STERN_M'],['STERN_M','SOLAR'],
-    ['SOLAR','NAVEL'],['NAVEL','PUBIS'],['PUBIS','GROIN'],
-    ['NECK_B','L_CLAV_O'],['L_CLAV_O','L_ACRM'],
-    ['NECK_B','R_CLAV_O'],['R_CLAV_O','R_ACRM'],
-    ['L_ACRM','L_ELBOW'],['L_ELBOW','L_WRIST_I'],
-    ['R_ACRM','R_ELBOW'],['R_ELBOW','R_WRIST_I'],
-    ['L_HIP','GROIN'],['R_HIP','GROIN'],['L_HIP','R_HIP'],
-    ['L_HIP','L_KNEECAP'],['L_KNEECAP','L_ANK_O'],
-    ['R_HIP','R_KNEECAP'],['R_KNEECAP','R_ANK_O'],
-];
-
-// ── CV bounding boxes [x1,y1,x2,y2] ─────────────────────────────
-const BOXES = {
-    head:       [0.420, 0.000, 0.580, 0.138],
-    torso:      [0.318, 0.162, 0.682, 0.500],
-    left_arm:   [0.130, 0.168, 0.378, 0.582],
-    right_arm:  [0.622, 0.168, 0.870, 0.582],
-    pelvis:     [0.348, 0.428, 0.652, 0.508],
-    left_leg:   [0.306, 0.492, 0.428, 0.962],
-    right_leg:  [0.572, 0.492, 0.694, 0.962],
-};
-const PART_KEYS = ['head','pelvis','left_arm','right_arm','left_leg','right_leg','torso'];
-
-// ── State ────────────────────────────────────────────────
-let hoveredKey = null;
-let T = 0;
-
-// ── Coordinate helpers ───────────────────────────────────
-function jx(n) { const d=DR[n]; return (J[n][0]+Math.sin(T*d[2]+d[0])*d[4])*canvas.width; }
-function jy(n) { const d=DR[n]; return (J[n][1]+Math.cos(T*d[3]+d[1])*d[4])*canvas.height; }
-function px(v) { return v * canvas.width;  }
-function py(v) { return v * canvas.height; }
-function g(n)  { return [jx(n), jy(n)]; }
-
-function mp(names, fs, ss, lw) {
-    ctx.beginPath();
-    names.forEach(([x,y],i) => i ? ctx.lineTo(x,y) : ctx.moveTo(x,y));
-    ctx.closePath();
-    if (fs) { ctx.fillStyle=fs; ctx.fill(); }
-    if (ss) { ctx.strokeStyle=ss; ctx.lineWidth=lw||1; ctx.stroke(); }
-}
-
-// ── Background: grid + Da Vinci references ─────────────
-function drawBackground() {
-    const W = canvas.width, H = canvas.height;
-    ctx.clearRect(0, 0, W, H);
-    ctx.save();
-
-    // Fine dot grid
-    ctx.fillStyle = 'rgba(56,189,248,0.07)';
-    const gs = W / 24;
-    for (let x = gs/2; x < W; x += gs)
-        for (let y = gs/2; y < H; y += gs) {
-            ctx.beginPath(); ctx.arc(x, y, 0.55, 0, Math.PI*2); ctx.fill();
-        }
-
-    // Da Vinci circle — centred at navel (y=0.378), radius reaches crotch & crown
-    const cX = W*0.5, cY = H*0.378, cR = H*0.376;
-    ctx.beginPath(); ctx.arc(cX, cY, cR, 0, Math.PI*2);
-    ctx.strokeStyle = 'rgba(56,189,248,0.05)'; ctx.lineWidth = 1;
-    ctx.setLineDash([6,10]); ctx.stroke(); ctx.setLineDash([]);
-
-    // Inscribed square (touches top of head and bottom of figure)
-    const sq = H * 0.476;  // half-height of 8-head figure
-    ctx.strokeStyle = 'rgba(255,255,255,0.020)'; ctx.lineWidth = 0.8;
-    ctx.strokeRect(cX-sq, cY-sq, sq*2, sq*2);
-
-    // Vertical axis
-    ctx.beginPath(); ctx.moveTo(cX, H*0.01); ctx.lineTo(cX, H*0.99);
-    ctx.strokeStyle='rgba(56,189,248,0.05)'; ctx.lineWidth=0.5;
-    ctx.setLineDash([3,7]); ctx.stroke(); ctx.setLineDash([]);
-
-    // 8-head proportion guides at exact head boundaries
-    // Figure: y=0.003 (top) to y=0.955 (heel) → head unit ≈ 0.119
-    const H0 = 0.003, Hu = 0.1190;
-    for (let i = 1; i <= 7; i++) {
-        const yv = H0 + i * Hu;
-        ctx.beginPath(); ctx.moveTo(W*0.03, H*yv); ctx.lineTo(W*0.97, H*yv);
-        ctx.strokeStyle='rgba(255,255,255,0.022)'; ctx.lineWidth=0.4;
-        ctx.setLineDash([2,6]); ctx.stroke(); ctx.setLineDash([]);
-    }
-
-    ctx.restore();
-}
-
-// ── Draw robot body — Zima Blue / Da Vinci hybrid aesthetic ──────
-function drawBody() {
-    const F  = 'rgba(14,165,233,0.07)';
-    const F2 = 'rgba(14,165,233,0.15)';
-    const S  = 'rgba(56,189,248,0.45)';
-    const SL = 'rgba(125,211,252,0.72)';
-    const SD = 'rgba(56,189,248,0.22)';
-    const hov = k => k === hoveredKey;
-    const fs  = k => hov(k) ? F2 : F;
-    const ss  = k => hov(k) ? SL : S;
-
-    // ── Skeleton centerlines ──────────────────────────────
-    ctx.strokeStyle = SD; ctx.lineWidth = 0.7;
-    BONES.forEach(([a,b]) => {
-        ctx.beginPath(); ctx.moveTo(jx(a),jy(a)); ctx.lineTo(jx(b),jy(b)); ctx.stroke();
-    });
-
-    // ── TRAPEZIUS panel ───────────────────────────────────
-    mp([g('CHIN'),g('L_TRAP_M'),g('L_TRAP_B'),g('L_ACRM'),
-        g('R_ACRM'),g('R_TRAP_B'),g('R_TRAP_M')], F, S, 1.0);
-
-    // ── CLAVICLE structural lines ─────────────────────────
-    ctx.strokeStyle=SL; ctx.lineWidth=1.2;
-    ctx.beginPath(); ctx.moveTo(jx('NECK_B'),jy('NECK_B')); ctx.lineTo(jx('L_CLAV_O'),jy('L_CLAV_O')); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(jx('NECK_B'),jy('NECK_B')); ctx.lineTo(jx('R_CLAV_O'),jy('R_CLAV_O')); ctx.stroke();
-
-    // ── CHEST PANELS (angular Zima Blue plates) ───────────
-    mp([g('STERN_T'),g('L_CLAV_O'),g('L_DELT_T'),g('L_PEC_TO'),g('L_PEC_BO'),g('STERN_M')],
-       fs('torso'), ss('torso'), 1.1);
-    mp([g('STERN_T'),g('L_PEC_TI'),g('L_PEC_BI'),g('STERN_M')],
-       'rgba(14,165,233,0.10)', hov('torso')?SL:SD, 0.7);
-    mp([g('STERN_T'),g('R_CLAV_O'),g('R_DELT_T'),g('R_PEC_TO'),g('R_PEC_BO'),g('STERN_M')],
-       fs('torso'), ss('torso'), 1.1);
-    mp([g('STERN_T'),g('R_PEC_TI'),g('R_PEC_BI'),g('STERN_M')],
-       'rgba(14,165,233,0.10)', hov('torso')?SL:SD, 0.7);
-    // Sternum ridge
-    ctx.beginPath(); ctx.moveTo(jx('STERN_T'),jy('STERN_T')); ctx.lineTo(jx('STERN_M'),jy('STERN_M'));
-    ctx.strokeStyle=SL; ctx.lineWidth=1.1; ctx.stroke();
-
-    // ── DELTOIDS ──────────────────────────────────────────
-    mp([g('L_CLAV_O'),g('L_DELT_T'),g('L_DELT_O'),g('L_DELT_B'),g('L_AXILLA'),g('L_TRAP_B')],
-       fs('left_arm'), SL, 1.4);
-    mp([g('R_CLAV_O'),g('R_DELT_T'),g('R_DELT_O'),g('R_DELT_B'),g('R_AXILLA'),g('R_TRAP_B')],
-       fs('right_arm'), SL, 1.4);
-
-    // ── OBLIQUES ─────────────────────────────────────────
-    mp([g('L_PEC_TO'),g('L_PEC_BO'),g('L_OBL_T'),g('L_OBL_B'),g('L_WAIST'),g('L_ILIAC'),g('L_AXILLA')],
-       F, SD, 0.8);
-    mp([g('R_PEC_TO'),g('R_PEC_BO'),g('R_OBL_T'),g('R_OBL_B'),g('R_WAIST'),g('R_ILIAC'),g('R_AXILLA')],
-       F, SD, 0.8);
-
-    // ── ABDOMEN panels + definition lines ─────────────────
-    mp([g('STERN_M'),g('L_OBL_T'),g('L_OBL_B'),g('L_WAIST'),
-        g('R_WAIST'),g('R_OBL_B'),g('R_OBL_T')], fs('torso'), hov('torso')?S:SD, 0.9);
-    ctx.beginPath(); ctx.moveTo(jx('SOLAR'),jy('SOLAR')); ctx.lineTo(jx('NAVEL'),jy('NAVEL'));
-    ctx.strokeStyle=SD; ctx.lineWidth=0.6; ctx.setLineDash([3,3]); ctx.stroke();
-    [[g('ABS_TL'),g('ABS_TR')],[g('ABS_ML'),g('ABS_MR')],[g('ABS_BL'),g('ABS_BR')]].forEach(([a,b])=>{
-        ctx.beginPath(); ctx.moveTo(a[0],a[1]); ctx.lineTo(b[0],b[1]);
-        ctx.strokeStyle='rgba(56,189,248,0.20)'; ctx.lineWidth=0.7; ctx.stroke();
-    });
-    ctx.beginPath(); ctx.moveTo(jx('ABS_TL'),jy('ABS_TL')); ctx.lineTo(jx('L_OBL_T'),jy('L_OBL_T'));
-    ctx.moveTo(jx('ABS_TR'),jy('ABS_TR')); ctx.lineTo(jx('R_OBL_T'),jy('R_OBL_T'));
-    ctx.strokeStyle=SD; ctx.lineWidth=0.5; ctx.stroke();
-    ctx.setLineDash([]);
-
-    // ── PELVIS panel (angular) ────────────────────────────
-    mp([g('L_ILIAC'),g('L_WAIST'),g('R_WAIST'),g('R_ILIAC'),
-        g('R_ILIAC_B'),g('R_HIP'),g('PUBIS'),g('L_HIP'),g('L_ILIAC_B')],
-       fs('pelvis'), hov('pelvis')?SL:S, 1.2);
-    ctx.beginPath();
-    ctx.moveTo(jx('L_ILIAC'),jy('L_ILIAC')); ctx.lineTo(jx('L_ILIAC_B'),jy('L_ILIAC_B'));
-    ctx.moveTo(jx('R_ILIAC'),jy('R_ILIAC')); ctx.lineTo(jx('R_ILIAC_B'),jy('R_ILIAC_B'));
-    ctx.strokeStyle=SL; ctx.lineWidth=0.8; ctx.stroke();
-
-    // ── UPPER ARMS (bicep+tricep angular plates) ──────────
-    mp([g('L_AXILLA'),g('L_DELT_B'),g('L_ARM_TO'),g('L_ARM_MO'),g('L_ELBOW_O'),
-        g('L_ELBOW_I'),g('L_ARM_MI'),g('L_ARM_TI')],
-       fs('left_arm'), ss('left_arm'), 1.0);
-    ctx.beginPath();
-    ctx.moveTo(jx('L_ARM_TO'),jy('L_ARM_TO')); ctx.lineTo(jx('L_ARM_MO'),jy('L_ARM_MO'));
-    ctx.lineTo(jx('L_ELBOW_O'),jy('L_ELBOW_O'));
-    ctx.strokeStyle=hov('left_arm')?SL:SD; ctx.lineWidth=0.7; ctx.setLineDash([3,3]); ctx.stroke(); ctx.setLineDash([]);
-
-    mp([g('R_AXILLA'),g('R_DELT_B'),g('R_ARM_TO'),g('R_ARM_MO'),g('R_ELBOW_O'),
-        g('R_ELBOW_I'),g('R_ARM_MI'),g('R_ARM_TI')],
-       fs('right_arm'), ss('right_arm'), 1.0);
-    ctx.beginPath();
-    ctx.moveTo(jx('R_ARM_TO'),jy('R_ARM_TO')); ctx.lineTo(jx('R_ARM_MO'),jy('R_ARM_MO'));
-    ctx.lineTo(jx('R_ELBOW_O'),jy('R_ELBOW_O'));
-    ctx.strokeStyle=hov('right_arm')?SL:SD; ctx.lineWidth=0.7; ctx.setLineDash([3,3]); ctx.stroke(); ctx.setLineDash([]);
-
-    // ── FOREARMS (tapered panels) ─────────────────────────
-    mp([g('L_ELBOW'),g('L_FRA_TO'),g('L_FRA_MO'),g('L_WRIST_O'),
-        g('L_WRIST_I'),g('L_FRA_MI'),g('L_FRA_TI')],
-       fs('left_arm'), ss('left_arm'), 1.0);
-    ctx.beginPath(); ctx.moveTo(jx('L_FRA_TO'),jy('L_FRA_TO')); ctx.lineTo(jx('L_FRA_MO'),jy('L_FRA_MO'));
-    ctx.strokeStyle=SD; ctx.lineWidth=0.6; ctx.setLineDash([2,3]); ctx.stroke(); ctx.setLineDash([]);
-
-    mp([g('R_ELBOW'),g('R_FRA_TO'),g('R_FRA_MO'),g('R_WRIST_O'),
-        g('R_WRIST_I'),g('R_FRA_MI'),g('R_FRA_TI')],
-       fs('right_arm'), ss('right_arm'), 1.0);
-    ctx.beginPath(); ctx.moveTo(jx('R_FRA_TO'),jy('R_FRA_TO')); ctx.lineTo(jx('R_FRA_MO'),jy('R_FRA_MO'));
-    ctx.strokeStyle=SD; ctx.lineWidth=0.6; ctx.setLineDash([2,3]); ctx.stroke(); ctx.setLineDash([]);
-
-    // ── HANDS ─────────────────────────────────────────────
-    mp([g('L_WRIST_O'),g('L_WRIST_I'),g('L_THUMB'),g('L_HAND'),g('L_FING')],
-       F, hov('left_arm')?S:SD, 0.9);
-    mp([g('R_WRIST_O'),g('R_WRIST_I'),g('R_THUMB'),g('R_HAND'),g('R_FING')],
-       F, hov('right_arm')?S:SD, 0.9);
-
-    // ── THIGHS (quad teardrop + hamstring) ───────────────
-    mp([g('L_QD_TO'),g('L_HIP'),g('L_QD_TI'),g('L_QD_MI'),
-        g('L_KNEE_I'),g('L_KNEECAP'),g('L_KNEE_O'),g('L_QD_MO')],
-       fs('left_leg'), ss('left_leg'), 1.1);
-    mp([g('L_HIP'),g('L_QD_TO'),g('L_QD_MO'),g('L_HAM_O'),g('L_KNEE_O')],
-       'rgba(14,165,233,0.05)', SD, 0.6);
-    ctx.beginPath(); ctx.moveTo(jx('L_QD_TO'),jy('L_QD_TO'));
-    ctx.lineTo(jx('L_QD_MO'),jy('L_QD_MO')); ctx.lineTo(jx('L_KNEE_O'),jy('L_KNEE_O'));
-    ctx.strokeStyle=SD; ctx.lineWidth=0.6; ctx.setLineDash([2,3]); ctx.stroke(); ctx.setLineDash([]);
-    ctx.beginPath(); ctx.moveTo(jx('L_QD_TI'),jy('L_QD_TI')); ctx.lineTo(jx('L_QD_MI'),jy('L_QD_MI'));
-    ctx.lineTo(jx('L_KNEE_I'),jy('L_KNEE_I'));
-    ctx.strokeStyle=hov('left_leg')?SL:SD; ctx.lineWidth=0.7; ctx.stroke();
-
-    mp([g('R_QD_TO'),g('R_HIP'),g('R_QD_TI'),g('R_QD_MI'),
-        g('R_KNEE_I'),g('R_KNEECAP'),g('R_KNEE_O'),g('R_QD_MO')],
-       fs('right_leg'), ss('right_leg'), 1.1);
-    mp([g('R_HIP'),g('R_QD_TO'),g('R_QD_MO'),g('R_HAM_O'),g('R_KNEE_O')],
-       'rgba(14,165,233,0.05)', SD, 0.6);
-    ctx.beginPath(); ctx.moveTo(jx('R_QD_TO'),jy('R_QD_TO'));
-    ctx.lineTo(jx('R_QD_MO'),jy('R_QD_MO')); ctx.lineTo(jx('R_KNEE_O'),jy('R_KNEE_O'));
-    ctx.strokeStyle=SD; ctx.lineWidth=0.6; ctx.setLineDash([2,3]); ctx.stroke(); ctx.setLineDash([]);
-    ctx.beginPath(); ctx.moveTo(jx('R_QD_TI'),jy('R_QD_TI')); ctx.lineTo(jx('R_QD_MI'),jy('R_QD_MI'));
-    ctx.lineTo(jx('R_KNEE_I'),jy('R_KNEE_I'));
-    ctx.strokeStyle=hov('right_leg')?SL:SD; ctx.lineWidth=0.7; ctx.stroke();
-
-    // ── KNEECAP panels (angular diamond) ─────────────────
-    [['L_KNEECAP','left_leg'],['R_KNEECAP','right_leg']].forEach(([kc,leg])=>{
-        const cx=jx(kc), cy=jy(kc), sz=canvas.height*0.024;
-        ctx.beginPath();
-        ctx.moveTo(cx,cy-sz); ctx.lineTo(cx+sz*0.65,cy);
-        ctx.lineTo(cx,cy+sz*0.55); ctx.lineTo(cx-sz*0.65,cy);
-        ctx.closePath();
-        ctx.fillStyle = hov(leg)?'rgba(14,165,233,0.18)':'rgba(14,165,233,0.08)';
-        ctx.strokeStyle = hov(leg)?SL:S; ctx.lineWidth=1.0;
-        ctx.fill(); ctx.stroke();
-    });
-
-    // ── SHINS + CALVES (gastrocnemius shape) ──────────────
-    mp([g('L_KNEE_O'),g('L_KNEECAP'),g('L_KNEE_I'),g('L_SHN_T'),
-        g('L_CALF_I'),g('L_SHN_B'),g('L_ANK_I'),g('L_ANK_O'),g('L_CALF_O')],
-       fs('left_leg'), ss('left_leg'), 1.0);
-    ctx.beginPath(); ctx.moveTo(jx('L_CALF_O'),jy('L_CALF_O')); ctx.lineTo(jx('L_CALF_I'),jy('L_CALF_I'));
-    ctx.strokeStyle=SL; ctx.lineWidth=1.0; ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(jx('L_SHN_T'),jy('L_SHN_T')); ctx.lineTo(jx('L_SHN_B'),jy('L_SHN_B'));
-    ctx.strokeStyle=SD; ctx.lineWidth=0.6; ctx.setLineDash([2,4]); ctx.stroke(); ctx.setLineDash([]);
-
-    mp([g('R_KNEE_O'),g('R_KNEECAP'),g('R_KNEE_I'),g('R_SHN_T'),
-        g('R_CALF_I'),g('R_SHN_B'),g('R_ANK_I'),g('R_ANK_O'),g('R_CALF_O')],
-       fs('right_leg'), ss('right_leg'), 1.0);
-    ctx.beginPath(); ctx.moveTo(jx('R_CALF_O'),jy('R_CALF_O')); ctx.lineTo(jx('R_CALF_I'),jy('R_CALF_I'));
-    ctx.strokeStyle=SL; ctx.lineWidth=1.0; ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(jx('R_SHN_T'),jy('R_SHN_T')); ctx.lineTo(jx('R_SHN_B'),jy('R_SHN_B'));
-    ctx.strokeStyle=SD; ctx.lineWidth=0.6; ctx.setLineDash([2,4]); ctx.stroke(); ctx.setLineDash([]);
-
-    // ── ANKLE JOINT detail rings ──────────────────────────
-    [['L_ANK_O','left_leg'],['R_ANK_O','right_leg']].forEach(([jn,leg])=>{
-        const ax=jx(jn), ay=jy(jn), ar=canvas.height*0.014;
-        ctx.beginPath(); ctx.arc(ax,ay,ar,0,Math.PI*2);
-        ctx.strokeStyle=hov(leg)?SL:S; ctx.lineWidth=0.8; ctx.stroke();
-    });
-
-    // ── FEET — outward-pointing (heel medial, toe lateral) ───
-    // Left:  ankle-outer(left) → ankle-inner(right) → heel(right-back) → ball(left) → toe(far-left)
-    mp([g('L_ANK_O'),g('L_ANK_I'),g('L_HEEL'),g('L_BALL'),g('L_TOE')],
-       F, hov('left_leg')?S:SD, 0.9);
-    // Right: ankle-inner(left) → ankle-outer(right) → heel(left-back) → ball(right) → toe(far-right)
-    mp([g('R_ANK_I'),g('R_ANK_O'),g('R_HEEL'),g('R_BALL'),g('R_TOE')],
-       F, hov('right_leg')?S:SD, 0.9);
-
-    // ── HEAD (angular cranium + Zima Blue visor) ──────────
-    const hx = jx('HEAD'), hy = jy('HEAD');
-    const hr  = canvas.height * 0.058;
-
-    // Cranium — 10-point polygon, realistic human skull shape
-    ctx.beginPath();
-    [
-        [hx,           hy-hr],          // crown
-        [hx+hr*0.60,   hy-hr*0.58],     // top-right
-        [hx+hr*0.72,   hy-hr*0.12],     // right temple
-        [hx+hr*0.68,   hy+hr*0.32],     // right cheek
-        [hx+hr*0.40,   hy+hr*0.65],     // right jaw
-        [hx,           hy+hr*0.72],     // chin
-        [hx-hr*0.40,   hy+hr*0.65],     // left jaw
-        [hx-hr*0.68,   hy+hr*0.32],     // left cheek
-        [hx-hr*0.72,   hy-hr*0.12],     // left temple
-        [hx-hr*0.60,   hy-hr*0.58],     // top-left
-    ].forEach(([x,y],i) => i ? ctx.lineTo(x,y) : ctx.moveTo(x,y));
-    ctx.closePath();
-    ctx.fillStyle = hov('head') ? F2 : F;
-    ctx.strokeStyle = hov('head') ? SL : 'rgba(125,211,252,0.68)';
-    ctx.lineWidth = hov('head') ? 2 : 1.5;
-    ctx.fill(); ctx.stroke();
-
-    // Face recess panel (dark inner polygon — Zima Blue)
-    ctx.beginPath();
-    ctx.moveTo(hx-hr*0.52, hy-hr*0.42);
-    ctx.lineTo(hx+hr*0.52, hy-hr*0.42);
-    ctx.lineTo(hx+hr*0.58, hy+hr*0.28);
-    ctx.lineTo(hx,         hy+hr*0.58);
-    ctx.lineTo(hx-hr*0.58, hy+hr*0.28);
-    ctx.closePath();
-    ctx.fillStyle='rgba(6,9,18,0.65)'; ctx.strokeStyle=SD; ctx.lineWidth=0.8;
-    ctx.fill(); ctx.stroke();
-
-    // VISOR — wide horizontal emissive band
-    const visY = hy - hr*0.20, visH = hr*0.30;
-    ctx.beginPath();
-    ctx.moveTo(hx-hr*0.50,visY); ctx.lineTo(hx+hr*0.50,visY);
-    ctx.lineTo(hx+hr*0.50,visY+visH); ctx.lineTo(hx-hr*0.50,visY+visH);
-    ctx.closePath();
-    ctx.fillStyle=`rgba(14,165,233,${0.12+0.07*Math.sin(T*1.8)})`;
-    ctx.strokeStyle=SL; ctx.lineWidth=1.1; ctx.fill(); ctx.stroke();
-
-    // Eye sensors — two horizontal rectangular displays
-    const eyeY2=visY+visH*0.12, eyeH2=visH*0.76;
-    [[-hr*0.34, hr*0.26],[hr*0.08, hr*0.26]].forEach(([ex,ew])=>{
-        const pulse=0.55+0.45*Math.sin(T*2.8);
-        ctx.beginPath();
-        ctx.moveTo(hx+ex,eyeY2); ctx.lineTo(hx+ex+ew,eyeY2);
-        ctx.lineTo(hx+ex+ew,eyeY2+eyeH2); ctx.lineTo(hx+ex,eyeY2+eyeH2);
-        ctx.closePath();
-        ctx.fillStyle=`rgba(56,189,248,${pulse*0.82})`;
-        ctx.strokeStyle=`rgba(125,211,252,${pulse})`; ctx.lineWidth=0.9;
-        ctx.fill(); ctx.stroke();
-        // Scan line inside eye
-        ctx.beginPath();
-        ctx.moveTo(hx+ex+ew*0.12,eyeY2+eyeH2*0.38); ctx.lineTo(hx+ex+ew*0.88,eyeY2+eyeH2*0.38);
-        ctx.strokeStyle=`rgba(200,240,255,${pulse*0.9})`; ctx.lineWidth=1.6; ctx.stroke();
-    });
-
-    // Neck collar / gorget panel
-    mp([g('NECK_L'),g('NECK_BL'),g('NECK_BR'),g('NECK_R')],
-       'rgba(14,165,233,0.15)', SL, 1.0);
-    ctx.beginPath();
-    ctx.moveTo(jx('NECK_L'),jy('NECK_L')); ctx.lineTo(jx('NECK_BL'),jy('NECK_BL'));
-    ctx.moveTo(jx('NECK_R'),jy('NECK_R')); ctx.lineTo(jx('NECK_BR'),jy('NECK_BR'));
-    ctx.strokeStyle=SD; ctx.lineWidth=0.6; ctx.setLineDash([2,2]); ctx.stroke(); ctx.setLineDash([]);
-
-    // Antenna
-    ctx.beginPath();
-    ctx.moveTo(hx,hy-hr); ctx.lineTo(hx,hy-hr-canvas.height*0.036);
-    ctx.strokeStyle='rgba(56,189,248,0.52)'; ctx.lineWidth=1.2; ctx.stroke();
-    const bR=3.0+1.0*Math.sin(T*3.5);
-    ctx.beginPath(); ctx.arc(hx,hy-hr-canvas.height*0.038,bR,0,Math.PI*2);
-    ctx.fillStyle=`rgba(56,189,248,${0.70+0.30*Math.sin(T*3.5)})`; ctx.fill();
-    ctx.beginPath(); ctx.arc(hx,hy-hr-canvas.height*0.038,bR+3.5,0,Math.PI*2);
-    ctx.strokeStyle=`rgba(56,189,248,${0.18+0.12*Math.sin(T*3.5)})`; ctx.lineWidth=0.8; ctx.stroke();
-
-    // ── SHOULDER JOINT RINGS (robotic articulation detail) ─
-    [['L_ACRM','left_arm'],['R_ACRM','right_arm']].forEach(([jn,leg])=>{
-        const sx=jx(jn), sy=jy(jn), sr=canvas.height*0.027;
-        const p=hov(leg)?1:0.55+0.30*Math.sin(T*1.8);
-        ctx.beginPath(); ctx.arc(sx,sy,sr,0,Math.PI*2);
-        ctx.strokeStyle=`rgba(56,189,248,${p*0.72})`; ctx.lineWidth=1.5; ctx.stroke();
-        ctx.beginPath(); ctx.arc(sx,sy,sr*0.58,0,Math.PI*2);
-        ctx.strokeStyle=`rgba(125,211,252,${p*0.45})`; ctx.lineWidth=0.8; ctx.stroke();
-        ctx.beginPath(); ctx.arc(sx,sy,sr*0.22,0,Math.PI*2);
-        ctx.fillStyle=`rgba(56,189,248,${p*0.90})`; ctx.fill();
-    });
-
-    // ── ELBOW JOINT RINGS ─────────────────────────────────
-    [['L_ELBOW','left_arm'],['R_ELBOW','right_arm']].forEach(([jn,leg])=>{
-        const ex=jx(jn), ey=jy(jn), er=canvas.height*0.018;
-        const p=hov(leg)?1:0.50+0.28*Math.sin(T*2.1+1.5);
-        ctx.beginPath(); ctx.arc(ex,ey,er,0,Math.PI*2);
-        ctx.strokeStyle=`rgba(56,189,248,${p*0.65})`; ctx.lineWidth=1.2; ctx.stroke();
-        ctx.beginPath(); ctx.arc(ex,ey,er*0.40,0,Math.PI*2);
-        ctx.fillStyle=`rgba(56,189,248,${p*0.82})`; ctx.fill();
-    });
-
-    // ── KNEE JOINT RINGS ──────────────────────────────────
-    [['L_KNEECAP','left_leg'],['R_KNEECAP','right_leg']].forEach(([jn,leg])=>{
-        const kx=jx(jn), ky=jy(jn), kr=canvas.height*0.020;
-        const p=hov(leg)?1:0.50+0.28*Math.sin(T*1.9+0.8);
-        ctx.beginPath(); ctx.arc(kx,ky,kr,0,Math.PI*2);
-        ctx.strokeStyle=`rgba(56,189,248,${p*0.65})`; ctx.lineWidth=1.2; ctx.stroke();
-        ctx.beginPath(); ctx.arc(kx,ky,kr*0.38,0,Math.PI*2);
-        ctx.fillStyle=`rgba(56,189,248,${p*0.82})`; ctx.fill();
-    });
-
-    // ── CORE ENERGY REACTOR (chest) ───────────────────────
-    const cX=jx('SOLAR'), cY=jy('SOLAR');
-    const cr=5.5+2.2*Math.sin(T*2.2);
-    const grd=ctx.createRadialGradient(cX,cY,0,cX,cY,cr*5.5);
-    grd.addColorStop(0,`rgba(56,189,248,${0.80+0.20*Math.sin(T*2.2)})`);
-    grd.addColorStop(1,'rgba(56,189,248,0)');
-    ctx.beginPath(); ctx.arc(cX,cY,cr*5.5,0,Math.PI*2); ctx.fillStyle=grd; ctx.fill();
-    ctx.beginPath(); ctx.arc(cX,cY,cr,0,Math.PI*2);
-    ctx.fillStyle='rgba(125,211,252,0.95)'; ctx.fill();
-    // Rotating hexagonal ring
-    ctx.save(); ctx.translate(cX,cY); ctx.rotate(T*0.65);
-    ctx.beginPath();
-    for(let i=0;i<6;i++){
-        const a=i*Math.PI/3, r=cr+7;
-        i===0?ctx.moveTo(Math.cos(a)*r,Math.sin(a)*r):ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r);
-    }
-    ctx.closePath();
-    ctx.strokeStyle=`rgba(56,189,248,${0.38+0.18*Math.sin(T*2)})`; ctx.lineWidth=1.2; ctx.stroke();
-    for(let i=0;i<6;i++){
-        const a=i*Math.PI/3;
-        ctx.beginPath(); ctx.arc(Math.cos(a)*10,Math.sin(a)*10,1.8,0,Math.PI*2);
-        ctx.fillStyle=`rgba(56,189,248,${0.42+0.38*Math.sin(T*2+i)})`; ctx.fill();
-    }
-    ctx.restore();
-}
-
-// ── Joint dots ───────────────────────────────────────────
-function drawJoints() {
-    const LARGE = ['L_ACRM','R_ACRM','L_ELBOW','R_ELBOW',
-                   'L_WRIST_I','R_WRIST_I','L_KNEECAP','R_KNEECAP',
-                   'L_ANK_O','R_ANK_O','L_HIP','R_HIP','GROIN'];
-    const SMALL = ['NECK_B','STERN_T','STERN_M','SOLAR','NAVEL','PUBIS',
-                   'L_CLAV_O','R_CLAV_O','L_WAIST','R_WAIST','L_ILIAC','R_ILIAC',
-                   'L_ARM_MI','R_ARM_MI','L_QD_MO','R_QD_MO','L_CALF_O','R_CALF_O'];
-    LARGE.forEach(n=>{
-        const x=jx(n), y=jy(n);
-        ctx.beginPath(); ctx.arc(x,y,4.8,0,Math.PI*2);
-        ctx.strokeStyle='rgba(255,255,255,0.30)'; ctx.lineWidth=0.8; ctx.stroke();
-        ctx.beginPath(); ctx.arc(x,y,2.0,0,Math.PI*2);
-        ctx.fillStyle='rgba(255,255,255,0.85)'; ctx.fill();
-    });
-    SMALL.forEach(n=>{
-        const x=jx(n), y=jy(n);
-        ctx.beginPath(); ctx.arc(x,y,2.8,0,Math.PI*2);
-        ctx.strokeStyle='rgba(255,255,255,0.20)'; ctx.lineWidth=0.6; ctx.stroke();
-        ctx.beginPath(); ctx.arc(x,y,1.2,0,Math.PI*2);
-        ctx.fillStyle='rgba(255,255,255,0.60)'; ctx.fill();
-    });
-}
-
-// ── CV detection boxes ───────────────────────────────────
-function drawCVBox(key, phase) {
-    const box = BOXES[key], info = getInfo(key), pct = info.progress;
-    const pcol = pctColor(pct), iH = key === hoveredKey;
-    const x1=px(box[0]),y1=py(box[1]),x2=px(box[2]),y2=py(box[3]);
-    const w=x2-x1, h=y2-y1;
-    const alpha = iH ? 0.95 : 0.28+0.18*Math.sin(phase+box[0]*4.9);
-    const brkL  = iH ? 18 : 11;
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.strokeStyle = iH ? pcol : '#00e87a';
-    ctx.lineWidth   = iH ? 1.8 : 0.9;
-    ctx.setLineDash([4,3]); ctx.strokeRect(x1,y1,w,h); ctx.setLineDash([]);
-
-    ctx.globalAlpha = iH ? 1 : Math.min(1,alpha+0.2);
-    ctx.strokeStyle = iH ? pcol : '#00ff8c';
-    ctx.lineWidth   = iH ? 2.2 : 1.4;
-    [[x1,y1+brkL,x1,y1,x1+brkL,y1],[x2-brkL,y1,x2,y1,x2,y1+brkL],
-     [x1,y2-brkL,x1,y2,x1+brkL,y2],[x2-brkL,y2,x2,y2,x2,y2-brkL]].forEach(([ax,ay,mx,my,bx,by])=>{
-        ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(mx,my); ctx.lineTo(bx,by); ctx.stroke();
-    });
-
-    ctx.globalAlpha = iH ? 1 : Math.min(1,alpha+0.15);
-    const lbl = info.label.toUpperCase();
-    const fs  = iH ? 10 : 8;
-    ctx.font  = `${fs}px "Google Sans Code","Fira Code",monospace`;
-    const tw  = ctx.measureText(lbl).width;
-    const tagW= tw+18, tagH=fs+9, tagX=x1, tagY=y1-tagH-3;
-    ctx.fillStyle = iH ? hexAlpha(pcol,0.85) : 'rgba(0,18,9,0.88)';
-    ctx.fillRect(tagX,tagY,tagW,tagH);
-    ctx.fillStyle = iH ? hexAlpha(pcol,0.38) : 'rgba(0,255,140,0.18)';
-    ctx.fillRect(tagX,tagY,tagW*(pct/100),tagH);
-    ctx.fillStyle = iH ? '#fff' : '#00ff8c';
-    ctx.textAlign='left'; ctx.textBaseline='middle';
-    ctx.fillText(lbl,tagX+9,tagY+tagH/2);
-    if (iH) {
-        ctx.font='9px "Google Sans Code","Fira Code",monospace';
-        ctx.fillStyle=pcol; ctx.textAlign='right'; ctx.textBaseline='bottom';
-        ctx.fillText(`${pct}%`,x2-5,y2-5);
-        ctx.fillStyle='rgba(255,255,255,0.4)';
-        ctx.fillText('CONF:',x2-5-ctx.measureText(`${pct}%`).width-4,y2-5);
-    }
-    ctx.globalAlpha=1; ctx.restore();
-}
-
-// ── Scan + HUD ───────────────────────────────────────────
-function drawScan() {
-    const sY = (T*52)%canvas.height;
-    const g  = ctx.createLinearGradient(0,sY-22,0,sY+6);
-    g.addColorStop(0,'rgba(56,189,248,0)');
-    g.addColorStop(1,'rgba(56,189,248,0.05)');
-    ctx.fillStyle=g; ctx.fillRect(0,sY-22,canvas.width,28);
-}
-function drawHUD() {
-    const W=canvas.width, H=canvas.height;
-    const fs=Math.max(8,W*0.012);
-    ctx.save();
-    ctx.font=`${fs}px "Google Sans Code","Fira Code",monospace`;
-    ctx.fillStyle='rgba(56,189,248,0.32)';
-    ctx.textAlign='left'; ctx.textBaseline='top';
-    ctx.fillText('OBJECT DETECTION v3.0',W*0.02,H*0.015);
-    ctx.textAlign='right';
-    ctx.fillText(`FRAME ${(T*30|0).toString().padStart(5,'0')}`,W*0.98,H*0.015);
-    ctx.textAlign='left';
-    ctx.fillText(`STATUS: ${hoveredKey?'TARGET LOCKED':'SCANNING...'}`,W*0.02,H*0.960);
-    if(hoveredKey){
-        const info=getInfo(hoveredKey);
-        ctx.fillStyle=pctColor(info.progress);
-        ctx.fillText(` ${info.label.toUpperCase()} · ${info.progress}%`,
-            W*0.02+ctx.measureText('STATUS: TARGET LOCKED').width+2,H*0.960);
-    }
-    ctx.restore();
-}
-
-// ── Hover / click detection ──────────────────────────────
-canvas.addEventListener('mousemove', function(e) {
-    const rect = canvas.getBoundingClientRect();
-    const mx   = (e.clientX - rect.left) / rect.width;
-    const my   = (e.clientY - rect.top)  / rect.height;
-
-    let found = null;
-    for (const key of PART_KEYS) {
-        const [x1,y1,x2,y2] = BOXES[key];
-        if (mx >= x1 && mx <= x2 && my >= y1 && my <= y2) { found = key; break; }
-    }
-    hoveredKey = found;
-    canvas.style.cursor = found ? 'pointer' : 'crosshair';
-
-    const tt = document.getElementById('robot-tooltip');
-    if (found) {
-        const info = getInfo(found);
-        const pct  = info.progress;
-        const col  = pctColor(pct);
-        document.getElementById('tt-label').textContent = info.label;
-        const ttPct = document.getElementById('tt-pct');
-        ttPct.textContent = pct + '%'; ttPct.style.color = col;
-        const ttBar = document.getElementById('tt-bar');
-        ttBar.style.width = pct + '%'; ttBar.style.background = col;
-        const ttDesc = document.getElementById('tt-desc');
-        if (info.description) { ttDesc.textContent = info.description; ttDesc.style.display = ''; }
-        else                  { ttDesc.style.display = 'none'; }
-        document.getElementById('tt-hint-text').textContent = 'Нажмите, чтобы раскрыть';
-        document.getElementById('tt-hint').style.display = '';
-        // Measure with visibility trick so offsetHeight is accurate even on first show
-        tt.style.visibility = 'hidden';
-        tt.style.display = 'block';
-        const ttW = tt.offsetWidth, ttH = tt.offsetHeight;
-        tt.style.visibility = '';
-        let tx = e.clientX + 16, ty = e.clientY - ttH / 2;
-        if (tx + ttW > innerWidth  - 8) tx = e.clientX - ttW - 16;
-        if (ty < 8) ty = 8;
-        if (ty + ttH > innerHeight - 8) ty = innerHeight - ttH - 8;
-        tt.style.left = tx + 'px'; tt.style.top = ty + 'px';
-    } else {
-        tt.style.display = 'none';
-    }
-});
-canvas.addEventListener('mouseleave', function() {
-    document.getElementById('robot-tooltip').style.display = 'none';
-    hoveredKey = null;
-});
-canvas.addEventListener('click', function() {
-    if (hoveredKey) openPartPanel(hoveredKey);
-});
-
-// ── Part panel switching ──────────────────────────────────
-const detailSection = document.getElementById('parts-detail-section');
-const tabsContainer = document.getElementById('parts-tabs');
-const tabBtns = {};
-
-function openPartPanel(key) {
-    if (!detailSection) return;
-    // Show section
-    detailSection.style.display = '';
-    // Hide all panels, deactivate all tabs
-    document.querySelectorAll('.part-panel').forEach(p => p.style.display = 'none');
-    Object.values(tabBtns).forEach(b => {
-        b.style.background = '';
-        b.style.color = '#94a3b8';
-        b.style.borderColor = 'rgba(56,189,248,0.18)';
-    });
-    // Show target panel and activate tab
-    const panel = document.getElementById('panel-' + key);
-    if (panel) panel.style.display = '';
-    if (tabBtns[key]) {
-        const info = getInfo(key);
-        const col  = pctColor(info.progress);
-        tabBtns[key].style.background   = hexAlpha(col, 0.15);
-        tabBtns[key].style.color        = col;
-        tabBtns[key].style.borderColor  = col;
-    }
-    // Scroll to section
-    detailSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-// Build tab buttons
-if (tabsContainer) {
-    PART_KEYS.forEach(function(key) {
-        const info  = getInfo(key);
-        const color = pctColor(info.progress);
-        const btn   = document.createElement('button');
-        btn.type = 'button';
-        btn.style.cssText = [
-            'display:inline-flex;align-items:center;gap:6px;',
-            'padding:6px 14px;border-radius:4px;cursor:pointer;',
-            'font-size:.80rem;letter-spacing:.04em;font-weight:600;',
-            'border:1px solid rgba(56,189,248,0.18);',
-            'background:transparent;color:#94a3b8;',
-            'transition:all .18s;',
-        ].join('');
-        btn.innerHTML =
-            `<span style="width:8px;height:8px;border-radius:2px;background:${color};` +
-            `display:inline-block;flex-shrink:0;"></span>` +
-            `${info.label} <span style="color:${color};font-size:.72rem;">${info.progress}%</span>`;
-        btn.addEventListener('click', function() { openPartPanel(key); });
-        tabBtns[key] = btn;
-        tabsContainer.appendChild(btn);
-    });
-}
-
-// ── Progress legend at bottom ─────────────────────────────
-const legend = document.getElementById('robot-legend');
-PART_KEYS.forEach(function(key) {
-    const info  = getInfo(key);
-    const pct   = info.progress;
-    const color = pctColor(pct);
-    const el    = document.createElement('div');
-    el.style.cssText = [
-        'display:flex;align-items:center;gap:6px;',
-        'cursor:pointer;padding:4px 10px;',
-        'border:1px solid rgba(56,189,248,0.14);',
-        'transition:border-color .18s,background .18s;',
-    ].join('');
-    el.innerHTML =
-        `<span style="flex:0 0 auto;width:7px;height:7px;background:${color};` +
-        `clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);display:inline-block;"></span>` +
-        `<span style="font-size:.70rem;color:#94a3b8;white-space:nowrap;">${info.label}</span>` +
-        `<span style="font-size:.70rem;color:${color};font-weight:700;letter-spacing:.04em;">${pct}%</span>`;
-    el.addEventListener('mouseenter', function() {
-        hoveredKey = key;
-        el.style.borderColor    = color;
-        el.style.background     = hexAlpha(color, 0.08);
-    });
-    el.addEventListener('mouseleave', function() {
-        hoveredKey = null;
-        el.style.borderColor = 'rgba(56,189,248,0.14)';
-        el.style.background  = '';
-    });
-    el.addEventListener('click', function() { openPartPanel(key); });
-    legend.appendChild(el);
-});
-
-// ── Render loop ───────────────────────────────────────────
-let prev = 0;
-(function frame(ts) {
-    const dt = Math.min((ts - prev) / 1000, 0.04);
-    prev = ts;
-    T += dt;
-
-    drawBackground();
-    drawBody();
-    drawJoints();
-    PART_KEYS.forEach(k => drawCVBox(k, T * 2.8));
-    drawScan();
-    drawHUD();
-
-    requestAnimationFrame(frame);
-})(0);
-
-})();
-</script>
 {% endblock %}

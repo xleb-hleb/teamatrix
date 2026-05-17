@@ -1,9 +1,246 @@
 <!-- Главная страница -->
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}TEAMATRIX — Разработка гуманоидного робота{% endblock %}
 
+{% block extra_head %}
+<script>window.ROBOT_FBX_URL = "{% static 'anim_robo.fbx' %}";</script>
+<script>window.ROBOT_EYE_CFG = {{ eye_cfg_json|safe }};</script>
+<script type="importmap">
+{
+    "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.162.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/",
+        "three/addons/loaders/FBXLoader.js": "{% static 'js/FBXLoader.js' %}"
+    }
+}
+</script>
+{% endblock %}
+
 {% block content %}
+
+<!-- ── FBX Robot Loading Overlay ────────────────────────────────── -->
+<style>
+@keyframes loaderPulse { 0%,100%{opacity:.8} 50%{opacity:.25} }
+#robot-loader-text { animation: loaderPulse 1.4s ease-in-out infinite; }
+</style>
+<div id="robot-loader" aria-hidden="true" style="position:fixed;inset:0;z-index:99980;background:#0f172a;pointer-events:all;">
+    <div id="robot-loader-text" style="position:absolute;bottom:14%;left:50%;transform:translateX(-50%);white-space:nowrap;font-family:'Google Sans Code',monospace;font-size:0.72rem;letter-spacing:0.28em;text-transform:uppercase;color:#38bdf8;">
+        ИНИЦИАЛИЗАЦИЯ...
+    </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+
+const overlay   = document.getElementById('robot-loader');
+const loaderTxt = document.getElementById('robot-loader-text');
+
+/* Переносим в <body> — main имеет transform-анимацию, которая делает его
+   containing block для position:fixed, что обрезает оверлей */
+document.body.appendChild(overlay);
+
+if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    overlay.style.display = 'none';
+} else {
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(W, H);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x0f172a, 1);
+    try { renderer.outputColorSpace = THREE.SRGBColorSpace; } catch (_) {}
+    renderer.domElement.style.cssText = 'position:absolute;top:0;left:0;';
+    overlay.appendChild(renderer.domElement);
+
+    const scene  = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, W / H, 0.1, 1e7);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 2.5));
+    const key = new THREE.DirectionalLight(0x38bdf8, 3.0);
+    key.position.set(1, 2, 2);
+    scene.add(key);
+    const rim = new THREE.DirectionalLight(0xffffff, 1.2);
+    rim.position.set(-1, 0.5, -1);
+    scene.add(rim);
+
+    /* MeshPhong + Fresnel edge glow через onBeforeCompile.
+       Inject в shader перед output_fragment — не ломает skinning.
+       Fresnel = 1 там где нормаль перпендикулярна камере (края/рёбра). */
+    const roboMat = new THREE.MeshPhongMaterial({
+        color:    0x0e3f6b,
+        emissive: 0x041526,
+        specular: 0x38bdf8,
+        shininess: 90,
+    });
+    roboMat.onBeforeCompile = (shader) => {
+        shader.fragmentShader = shader.fragmentShader.replace(
+            '#include <output_fragment>',
+            `{
+                float _fr = pow(1.0 - abs(dot(normalize(vViewPosition), normal)), 3.5);
+                outgoingLight += _fr * vec3(0.22, 0.749, 0.973) * 0.7;
+            }
+            #include <output_fragment>`
+        );
+    };
+
+    /* Eye ring: 2D canvas drawn over WebGL each frame */
+    let eyeBboxCenterLocal = null, eyeRingCtx = null;
+    const eyeCfg = window.ROBOT_EYE_CFG || { x:0, y:0, size:25, intensity:1.0, startT:0.72 };
+
+    let stopped = false, fadeStarted = false;
+    let loadedObj = null, rotStartTime = null;
+
+    const easeInOut = t => t < 0.5 ? 2*t*t : -1 + (4 - 2*t)*t;
+
+    function startFade() {
+        if (fadeStarted) return;
+        fadeStarted = true;
+        overlay.style.transition = 'opacity 0.8s ease-out';
+        overlay.style.opacity = '0';
+        setTimeout(() => {
+            stopped = true;
+            overlay.style.display = 'none';
+            renderer.dispose();
+            if (window.triggerBlockMaterialise) window.triggerBlockMaterialise();
+        }, 800);
+    }
+
+    new FBXLoader().load(
+        window.ROBOT_FBX_URL,
+        (obj) => {
+            obj.updateWorldMatrix(true, true);
+            const box = new THREE.Box3();
+
+            obj.traverse(child => {
+                if (child.isMesh || child.isSkinnedMesh) {
+                    child.material = Array.isArray(child.material)
+                        ? child.material.map(() => roboMat) : roboMat;
+                    child.castShadow = false;
+                    child.receiveShadow = false;
+                    child.geometry.computeBoundingBox();
+                    box.union(child.geometry.boundingBox.clone().applyMatrix4(child.matrixWorld));
+                }
+            });
+
+            if (!box.isEmpty()) {
+                const center = box.getCenter(new THREE.Vector3());
+                const size   = box.getSize(new THREE.Vector3());
+                const maxDim = Math.max(size.x, size.y, size.z);
+                const dist   = maxDim * 1.1;
+                camera.position.set(center.x, center.y + size.y * 0.05, center.z + dist);
+                camera.lookAt(center);
+                camera.near = maxDim * 0.005;
+                camera.far  = maxDim * 200;
+                camera.updateProjectionMatrix();
+            }
+
+            scene.add(obj);
+            loadedObj = obj;
+            if (loaderTxt) loaderTxt.style.display = 'none';
+
+            /* Eye ring: store bbox centre in obj local space, create 2D canvas overlay */
+            if (!box.isEmpty()) {
+                eyeBboxCenterLocal = obj.worldToLocal(box.getCenter(new THREE.Vector3()).clone());
+
+                const rc = document.createElement('canvas');
+                rc.width = W; rc.height = H;
+                rc.style.cssText = 'position:absolute;top:0;left:0;pointer-events:none;';
+                overlay.appendChild(rc);
+                eyeRingCtx = rc.getContext('2d');
+            }
+
+            /* Запуск code-анимации: поворот -45° → +45° за 2.5 с */
+            rotStartTime = performance.now();
+            setTimeout(startFade, 3700); /* 2.5 с поворот + 1.2 с пауза */
+        },
+        undefined,
+        (err) => {
+            console.error('[robot-loader] error:', err);
+            if (loaderTxt) {
+                loaderTxt.textContent = 'ОШИБКА ЗАГРУЗКИ';
+                loaderTxt.style.cssText += ';color:#ef4444;animation:none;opacity:1';
+            }
+            setTimeout(startFade, 2500);
+        }
+    );
+
+    (function tick() {
+        if (stopped) return;
+        requestAnimationFrame(tick);
+        /* Плавный поворот -45° → +45° (ease-in-out, 2.5 с) */
+        if (loadedObj && rotStartTime !== null) {
+            const t = Math.min((performance.now() - rotStartTime) / 2500, 1);
+            loadedObj.rotation.y = 0 + (Math.PI / 2) * easeInOut(t);
+
+            /* Eye ring: project bbox centre → screen, offset by admin pixels */
+            if (eyeBboxCenterLocal && eyeRingCtx) {
+                const eyeT = Math.max(0, Math.min(1, (t - eyeCfg.startT) / (1 - eyeCfg.startT)));
+                const ga   = easeInOut(eyeT);
+                eyeRingCtx.clearRect(0, 0, W, H);
+                if (ga > 0.004) {
+                    /* Centre of model projected to screen (follows rotation) */
+                    loadedObj.updateMatrixWorld();
+                    const cw  = eyeBboxCenterLocal.clone().applyMatrix4(loadedObj.matrixWorld);
+                    const cn  = cw.clone().project(camera);
+                    const cx  = (cn.x *  0.5 + 0.5) * W;
+                    const cy  = (cn.y * -0.5 + 0.5) * H;
+
+                    /* Admin pixel offsets: eye_x right +, eye_y up + */
+                    const sx = cx + eyeCfg.x;
+                    const sy = cy - eyeCfg.y;
+
+                    /* Ring radius in pixels with scale-in and pulse */
+                    const scaleIn = 0.87 + 0.13 * ga;
+                    const pulse   = 1 + 0.035 * Math.sin(performance.now() / 95.5);
+                    const R       = Math.max(4, eyeCfg.size) * scaleIn * pulse;
+                    const br = Math.max(0, eyeCfg.intensity); // brightness multiplier
+
+                    const c = eyeRingCtx;
+                    c.save();
+                    c.globalAlpha = ga;
+
+                    /* Radial gradient glow — fills a soft disc around the eye */
+                    const clamp = v => Math.min(1, v);
+                    const grad = c.createRadialGradient(sx, sy, 0, sx, sy, R * 3.6);
+                    grad.addColorStop(0,    `rgba(56,189,248,${clamp(0.52 * br)})`);
+                    grad.addColorStop(0.28, `rgba(56,189,248,${clamp(0.22 * br)})`);
+                    grad.addColorStop(0.62, `rgba(14,165,233,${clamp(0.07 * br)})`);
+                    grad.addColorStop(1,    'rgba(14,165,233,0)');
+                    c.fillStyle = grad;
+                    c.beginPath();
+                    c.arc(sx, sy, R * 3.6, 0, Math.PI * 2);
+                    c.fill();
+
+                    /* Mid glow ring */
+                    c.beginPath();
+                    c.arc(sx, sy, R, 0, Math.PI * 2);
+                    c.strokeStyle = `rgba(56,189,248,${clamp(0.55 * br)})`;
+                    c.lineWidth   = R * 0.48;
+                    c.shadowColor = '#38bdf8';
+                    c.shadowBlur  = R * 2.2 * Math.min(2, br);
+                    c.stroke();
+
+                    /* Sharp bright core ring */
+                    c.beginPath();
+                    c.arc(sx, sy, R * 0.58, 0, Math.PI * 2);
+                    c.strokeStyle = '#eaf9ff';
+                    c.lineWidth   = 1.5;
+                    c.shadowColor = '#7dd3fc';
+                    c.shadowBlur  = R * 2.8 * Math.min(2, br);
+                    c.stroke();
+
+                    c.restore();
+                }
+            }
+        }
+        renderer.render(scene, camera);
+    })();
+}
+</script>
 
 <!-- ── Hero ─────────────────────────────────────────────────────── -->
 <div class="mb-5 text-center position-relative py-3" data-hero>
